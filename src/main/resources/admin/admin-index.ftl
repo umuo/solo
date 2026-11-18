@@ -119,6 +119,11 @@
                         </div>
                     </li>
                     <li>
+                        <div id="tabs_apikey">
+                            <a href="#tools/apikey">${apiKeyMgmtLabel}</a>
+                        </div>
+                    </li>
+                    <li>
                         <div id="tabs_others">
                             <a href="#tools/others/tag">${othersLabel}</a>
                         </div>
@@ -150,6 +155,7 @@
         <div id="tabsPanel_comment-list" class="fn__none"></div>
         <div id="tabsPanel_plugin-list" class="fn__none"></div>
         <div id="tabsPanel_staticsite" class="fn__none"></div>
+        <div id="tabsPanel_apikey" class="fn__none"></div>
         <div id="tabsPanel_about" class="fn__none"></div>
     </div>
     <div class="fn__clear"></div>
@@ -161,6 +167,7 @@
 <#include "admin-label.ftl">
 <script src="${staticServePath}/js/lib/vditor/dist/index.min.js?v=3.9.7"></script>
 <script src="${staticServePath}/js/admin/admin.min.js?${staticResourceVersion}"></script>
+<script src="${servePath}/js/admin/apikey.js?${staticResourceVersion}"></script>
 ${plugins}
 <script>
   admin.init()

@@ -12,18 +12,11 @@
 package org.b3log.solo.processor.console;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.b3log.latke.http.RequestContext;
 import org.b3log.latke.ioc.BeanManager;
 import org.b3log.latke.ioc.Singleton;
 import org.b3log.latke.model.Role;
 import org.b3log.latke.model.User;
-import org.b3log.solo.model.Common;
-import org.b3log.solo.model.Option;
-import org.b3log.solo.service.OptionQueryService;
-import org.b3log.solo.service.UserQueryService;
 import org.b3log.solo.util.Solos;
 import org.json.JSONObject;
 
@@ -36,11 +29,6 @@ import org.json.JSONObject;
  */
 @Singleton
 public class ConsoleAuthMidware {
-
-    /**
-     * Logger.
-     */
-    private static final Logger LOGGER = LogManager.getLogger(ConsoleAuthMidware.class);
 
     public void handle(final RequestContext context) {
         // 1. Check API Key in header first
@@ -80,31 +68,7 @@ public class ConsoleAuthMidware {
      * @return {@code true} if authentication succeeds
      */
     static boolean authenticateByApiKey(final String apiKey, final RequestContext context) {
-        try {
-            final BeanManager beanManager = BeanManager.getInstance();
-            final OptionQueryService optionQueryService = beanManager.getReference(OptionQueryService.class);
-            final JSONObject apiKeyOpt = optionQueryService.getOptionById(Option.ID_C_API_KEY);
-            if (null == apiKeyOpt) {
-                return false;
-            }
-
-            final String storedKey = apiKeyOpt.optString(Option.OPTION_VALUE);
-            if (StringUtils.isBlank(storedKey) || !apiKey.equals(storedKey)) {
-                return false;
-            }
-
-            // API Key valid, set admin user in context
-            final UserQueryService userQueryService = beanManager.getReference(UserQueryService.class);
-            final JSONObject admin = userQueryService.getAdmin();
-            if (null == admin) {
-                return false;
-            }
-
-            context.attr(Common.CURRENT_USER, admin);
-            return true;
-        } catch (final Exception e) {
-            LOGGER.log(Level.WARN, "API Key authentication failed", e);
-            return false;
-        }
+        final ApiKeyConsole apiKeyConsole = BeanManager.getInstance().getReference(ApiKeyConsole.class);
+        return apiKeyConsole.authenticateAndRecord(apiKey, context);
     }
 }

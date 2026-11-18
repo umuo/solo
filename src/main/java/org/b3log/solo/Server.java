@@ -539,6 +539,7 @@ public final class Server extends BaseServer {
                 "/admin-theme-list.do",
                 "/admin-plugin-list.do",
                 "/admin-staticsite.do",
+                "/admin-apikey.do",
                 "/admin-main.do",
                 "/admin-about.do"}, adminConsole::showAdminFunctions);
 
@@ -609,8 +610,10 @@ public final class Server extends BaseServer {
         final ApiKeyConsole apiKeyConsole = beanManager.getReference(ApiKeyConsole.class);
         final Dispatcher.RouterGroup apiKeyGroup = Dispatcher.group();
         apiKeyGroup.middlewares(consoleAdminAuthMidware::handle);
-        apiKeyGroup.get("/console/api-key", apiKeyConsole::getApiKey).
-                post("/console/api-key", apiKeyConsole::generateApiKey).
+        apiKeyGroup.get("/console/api-key", apiKeyConsole::getApiKeys).
+                post("/console/api-key", apiKeyConsole::createApiKey).
+                put("/console/api-key/{id}", apiKeyConsole::updateApiKey).
+                delete("/console/api-key/{id}", apiKeyConsole::removeApiKeyById).
                 delete("/console/api-key", apiKeyConsole::removeApiKey);
 
         final SkinConsole skinConsole = beanManager.getReference(SkinConsole.class);

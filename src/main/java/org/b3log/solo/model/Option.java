@@ -316,9 +316,14 @@ public final class Option {
     public static final String CATEGORY_C_SKIN = "skin";
 
     /**
-     * Key of API Key.
+     * Key of API Key (legacy single key).
      */
     public static final String ID_C_API_KEY = "apiKey";
+
+    /**
+     * Key of API Keys JSON array.
+     */
+    public static final String ID_C_API_KEYS = "apiKeys";
 
     /**
      * Category - API.
