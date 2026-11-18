@@ -11,21 +11,38 @@
  */
 package org.b3log.solo.processor.console;
 
+import org.apache.commons.lang3.StringUtils;
 import org.b3log.latke.http.RequestContext;
 import org.b3log.latke.ioc.Singleton;
 import org.b3log.solo.util.Solos;
 
 /**
- * The common auth check middleware for admin console.
+ * The admin auth check middleware for admin console.
+ * <p>
+ * Requires the user to be an admin (not just logged in).
+ * </p>
  *
  * @author <a href="http://88250.b3log.org">Liang Ding</a>
- * @version 2.0.0.0, Feb 9, 2020
+ * @version 2.1.0.0, Nov 18, 2026
  * @since 2.9.5
  */
 @Singleton
 public class ConsoleAdminAuthMidware {
 
     public void handle(final RequestContext context) {
+        // 1. Check API Key in header first (API Key always has admin privilege)
+        final String apiKey = context.header("X-Solo-API-Key");
+        if (StringUtils.isNotBlank(apiKey)) {
+            if (ConsoleAuthMidware.authenticateByApiKey(apiKey, context)) {
+                context.handle();
+                return;
+            }
+            context.sendError(401);
+            context.abort();
+            return;
+        }
+
+        // 2. Fall back to Cookie-based admin check
         if (!Solos.isAdminLoggedIn(context)) {
             context.sendError(401);
             context.abort();

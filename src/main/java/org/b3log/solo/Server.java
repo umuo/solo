@@ -606,6 +606,13 @@ public final class Server extends BaseServer {
                 get("/console/preference/", preferenceConsole::getPreference).
                 put("/console/preference/", preferenceConsole::updatePreference);
 
+        final ApiKeyConsole apiKeyConsole = beanManager.getReference(ApiKeyConsole.class);
+        final Dispatcher.RouterGroup apiKeyGroup = Dispatcher.group();
+        apiKeyGroup.middlewares(consoleAdminAuthMidware::handle);
+        apiKeyGroup.get("/console/api-key", apiKeyConsole::getApiKey).
+                post("/console/api-key", apiKeyConsole::generateApiKey).
+                delete("/console/api-key", apiKeyConsole::removeApiKey);
+
         final SkinConsole skinConsole = beanManager.getReference(SkinConsole.class);
         final Dispatcher.RouterGroup skinConsoleGroup = Dispatcher.group();
         skinConsoleGroup.middlewares(consoleAdminAuthMidware::handle);

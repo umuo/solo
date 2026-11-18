@@ -285,6 +285,12 @@ public final class Solos {
      * @return the current logged-in user, returns {@code null} if not found
      */
     public static JSONObject getCurrentUser(final RequestContext context) {
+        // Check context attr first (set by API Key authentication)
+        final Object apiUser = context.attr(Common.CURRENT_USER);
+        if (apiUser instanceof JSONObject) {
+            return (JSONObject) apiUser;
+        }
+
         final Request request = context.getRequest();
         final Set<Cookie> cookies = request.getCookies();
         if (cookies.isEmpty()) {

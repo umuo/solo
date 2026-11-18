@@ -22,6 +22,11 @@ package org.b3log.solo.model;
 public final class Common {
 
     /**
+     * Key of current user (set by API Key auth middleware).
+     */
+    public static final String CURRENT_USER = "currentUser";
+
+    /**
      * Key of favicon URL.
      */
     public static final String FAVICON_URL = "faviconURL";
