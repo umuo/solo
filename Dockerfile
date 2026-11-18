@@ -1,16 +1,16 @@
-FROM maven:3.8.4-openjdk-11 as MVN_BUILD
+FROM maven:3.9-eclipse-temurin-17 as MVN_BUILD
 
 WORKDIR /opt/solo/
 ADD . /tmp
 RUN cd /tmp && mvn package -DskipTests -Pci -q && mv target/solo/* /opt/solo/ \
 && cp -f /tmp/src/main/resources/docker/* /opt/solo/
 
-FROM openjdk:18-alpine
+FROM eclipse-temurin:17-jre-jammy
 LABEL maintainer="Liang Ding<845765@qq.com>"
 
 WORKDIR /opt/solo/
 COPY --from=MVN_BUILD /opt/solo/ /opt/solo/
-RUN apk add --no-cache ca-certificates tzdata
+RUN apt-get update && apt-get install -y ca-certificates tzdata
 
 ENV TZ=Asia/Shanghai
 ARG git_commit=0

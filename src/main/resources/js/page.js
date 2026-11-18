@@ -20,6 +20,18 @@ window.Page = function (tips) {
   this.tips = tips
 }
 
+const escapeHTML = function (text) {
+  return String(text).replace(/[&<>"']/g, function (char) {
+    return {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[char]
+  })
+}
+
 $.extend(Page.prototype, {
   /**
    * 第三方评论
@@ -29,23 +41,49 @@ $.extend(Page.prototype, {
     if ($vcomment.length === 0) {
       return
     }
-    const vcomment = new Vcomment({
-      id: 'vcomment',
-      postId: $vcomment.data('postid'),
-      url: 'https://ld246.com',
-      userName: $vcomment.data('name'),
-      currentPage: 1,
-      vditor: {
-        lineNumber: Label.showCodeBlockLn,
-        hljsEnable: !Label.luteAvailable,
-        hljsStyle: Label.hljsStyle,
-      },
-      error () {
-        $vcomment.remove()
-      },
-    })
-
-    vcomment.render()
+    if (typeof Vditor === "undefined") {
+        $.ajax({
+            method: 'GET',
+            url: `${Label.staticServePath}/js/lib/vditor/dist/index.min.js?v=3.9.7`,
+            dataType: 'script',
+            cache: true,
+            success: () => {
+                const vcomment = new Vcomment({
+                    id: 'vcomment',
+                    postId: $vcomment.data('postid'),
+                    url: 'https://ld246.com',
+                    userName: $vcomment.data('name'),
+                    currentPage: 1,
+                    vditor: {
+                        lineNumber: Label.showCodeBlockLn,
+                        hljsEnable: !Label.luteAvailable,
+                        hljsStyle: Label.hljsStyle,
+                    },
+                    error () {
+                        $vcomment.remove()
+                    },
+                })
+                vcomment.render()
+            },
+        })
+    } else {
+        const vcomment = new Vcomment({
+            id: 'vcomment',
+            postId: $vcomment.data('postid'),
+            url: 'https://ld246.com',
+            userName: $vcomment.data('name'),
+            currentPage: 1,
+            vditor: {
+                lineNumber: Label.showCodeBlockLn,
+                hljsEnable: !Label.luteAvailable,
+                hljsStyle: Label.hljsStyle,
+            },
+            error () {
+                $vcomment.remove()
+            },
+        })
+        vcomment.render()
+    }
   },
   /**
    * 分享
@@ -131,7 +169,7 @@ $.extend(Page.prototype, {
         var listHtml = ''
         for (var i = 0; i < randomArticles.length; i++) {
           var article = randomArticles[i]
-          var title = article.articleTitle
+          var title = escapeHTML(article.articleTitle)
           var randomArticleLiHtml = '<li>' + '<a rel=\'nofollow\' title=\'' +
             title + '\' href=\'' + Label.servePath +
             article.articlePermalink + '\'>' + title + '</a></li>'
@@ -164,7 +202,7 @@ $.extend(Page.prototype, {
         var listHtml = ''
         for (var i = 0; i < articles.length; i++) {
           var article = articles[i]
-          var title = article.articleTitle
+          var title = escapeHTML(article.articleTitle)
           var articleLiHtml = '<li>'
             + '<a rel=\'nofollow\' title=\'' + title + '\' href=\'' +
             Label.servePath + article.articlePermalink + '\'>'
@@ -209,7 +247,7 @@ $.extend(Page.prototype, {
           var listHtml = ''
           for (var i = 0; i < articles.length; i++) {
             var article = articles[i]
-            var title = article.articleTitle
+            var title = escapeHTML(article.articleTitle)
             var articleLiHtml = '<li>'
               + '<a rel=\'nofollow\' title=\'' + title +
               '\' target=\'_blank\' href=\'' + article.articlePermalink + '\'>'
