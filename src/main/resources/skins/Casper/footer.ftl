@@ -32,9 +32,9 @@
             ${linkLabel}
             </a>
             <br>
-            ${statistic.statisticPublishedBlogArticleCount} ${articleLabel} &nbsp;
-            <span data-uvstaturl="${servePath}">${statistic.statisticBlogViewCount}</span> ${viewLabel} &nbsp;
-            <#if !staticSite>${onlineVisitorCnt} ${onlineVisitorLabel}</#if>
+            ${statistic.statisticPublishedBlogArticleCount} ${articleLabel} &nbsp;·&nbsp;
+            <span data-uvstaturl="${servePath}">${statistic.statisticBlogViewCount}</span> ${viewLabel}
+            <#if !staticSite>&nbsp;·&nbsp; ${onlineVisitorCnt} ${onlineVisitorLabel}</#if>
         </div>
     </div>
 </footer>
@@ -42,5 +42,8 @@
 <#include "../../common-template/label.ftl">
 <script type="text/javascript"
         src="${staticServePath}/skins/${skinDirName}/js/common.min.js?${staticResourceVersion}"
+        charset="utf-8"></script>
+<script type="text/javascript"
+        src="${servePath}/skins/${skinDirName}/js/enhance.js?${staticResourceVersion}"
         charset="utf-8"></script>
 ${plugins}

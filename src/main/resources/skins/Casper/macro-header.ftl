@@ -21,6 +21,10 @@
             <h2 class="header__h2">${blogSubtitle}</h2>
         </div>
         <nav class="wrapper header__nav fn__clear">
+            <button type="button" class="header__nav-toggle" aria-label="菜单" aria-expanded="false">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="header__nav-links">
             <a href="${servePath}" rel="start">
                 <#if type == 'article'>
                     ${blogTitle}
@@ -62,6 +66,7 @@
                         </a>
                     </#if>
                 </#if>
+            </div>
             </div>
         </nav>
     </header>

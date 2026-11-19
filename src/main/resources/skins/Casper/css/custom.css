@@ -1,0 +1,578 @@
+/*
+ * Solo - A small and beautiful blogging system written in Java.
+ * Copyright (c) 2010-present, b3log.org
+ *
+ * Solo is licensed under Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *         http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
+/* 1. Keep sakura canvas harmless and never cause horizontal overflow */
+#canvas_sakura {
+  max-width: 100vw !important;
+  pointer-events: none !important;
+}
+
+/* 2. Header navigation & dark icon contrast fix */
+.header {
+  z-index: 35;
+}
+
+.header__nav {
+  position: relative;
+  z-index: 30;
+}
+
+.header__nav img[src*="github-icon"] {
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.header__nav a:hover img[src*="github-icon"] {
+  opacity: 1;
+}
+
+.header__nav-toggle {
+  display: none;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  padding: 9px 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header__nav-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: #fff;
+  border-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.header__nav--open .header__nav-toggle span:nth-child(1) {
+  transform: translateY(9px) rotate(45deg);
+}
+
+.header__nav--open .header__nav-toggle span:nth-child(2) {
+  opacity: 0;
+}
+
+.header__nav--open .header__nav-toggle span:nth-child(3) {
+  transform: translateY(-9px) rotate(-45deg);
+}
+
+@media (min-width: 769px) {
+  .header__nav-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .header__nav-links .fn__right {
+    margin-left: auto;
+    float: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .header--index .header__nav-links {
+    padding-bottom: 90px;
+  }
+
+  .header--index .header__nav a {
+    margin: 0 20px 0 0;
+  }
+
+  .header__nav a svg {
+    margin-top: 0;
+  }
+}
+
+/* 3. Homepage article cards & excerpts */
+.articles .item {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.articles .item--large .item__cover {
+  min-height: 300px;
+  background-color: #f4f6f8;
+}
+
+.articles .item__abstract {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.7;
+}
+
+/* 4. Article detail sticky progress bar & header */
+.article__top {
+  height: 56px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  z-index: 40;
+  backdrop-filter: blur(8px);
+}
+
+.article__top > .fn__clear {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 53px;
+}
+
+.article__top .title {
+  float: none;
+  margin-left: 0;
+  line-height: 53px;
+  font-size: 18px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: calc(100% - 260px);
+}
+
+.article__top .article__share {
+  float: none;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.article__top .article__share .item {
+  height: 53px;
+  width: 48px;
+  padding: 16px 0;
+}
+
+.article__progress {
+  display: block;
+  width: calc(100% + 32px);
+  margin: 0 -16px;
+  height: 3px;
+}
+
+/* 5. Right sticky TOC bounds & overflow ellipsis */
+@media (min-width: 877px) {
+  .post__toc {
+    right: 16px;
+    max-width: 240px;
+    max-height: calc(100vh - 180px);
+    padding: 8px 10px 8px 3px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+    border-radius: 6px;
+    box-sizing: border-box;
+    z-index: 20;
+  }
+
+  .post__toc .article__toc a {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+}
+
+/* 6. Code blocks & inline code UX */
+.vditor-reset :not(pre) > code:not(.hljs):not(.highlight-chroma) {
+  background-color: rgba(27, 31, 35, 0.06);
+  color: #c7254e;
+  border: 1px solid rgba(27, 31, 35, 0.08);
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+  font-size: 86%;
+}
+
+.vditor-reset pre {
+  position: relative;
+  background-color: #272822;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 1.25em 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.vditor-reset pre .vditor-copy {
+  display: none !important;
+}
+
+.vditor-reset pre > code,
+.vditor-reset pre > code:not(.hljs):not(.highlight-chroma) {
+  background-color: #272822 !important;
+  background-image: none !important;
+  color: #f8f8f2;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  padding: 14px 16px;
+  display: block;
+  overflow-x: auto !important;
+  white-space: pre !important;
+  word-break: normal !important;
+  word-wrap: normal !important;
+  line-height: 1.6;
+}
+
+.vditor-reset pre > code.vditor-linenumber {
+  padding-left: 4em !important;
+}
+
+.vditor-reset pre > code.vditor-linenumber .vditor-linenumber__rows {
+  top: 14px;
+}
+
+.solo-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background-color: #1e1f1c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  user-select: none;
+}
+
+.solo-code-lang {
+  color: #a6e22e;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.solo-code-copy {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.solo-code-copy:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.solo-code-copy--copied {
+  background: #2e7d32 !important;
+  border-color: #2e7d32 !important;
+  color: #fff !important;
+}
+
+/* 7. Hide empty related/random bottom cards */
+.article__bottom .item:empty,
+.article__bottom.article__bottom--empty {
+  display: none !important;
+}
+
+/* 8. Secondary pages: header contrast, links grid, tag pills & archives grid */
+.other__title,
+.other__title a,
+.other__title .ft__a {
+  color: #fff !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.other__content--categories:empty {
+  display: none;
+}
+
+.other__content--links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.other__content--links .other__item {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid #e6ebf1;
+  border-radius: 8px;
+  background-color: #fafbfc;
+  white-space: normal;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.other__content--links .other__item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(39, 44, 49, 0.08);
+  border-color: #3eb0ef;
+}
+
+.other__content--links .other__item > a {
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #15171a;
+  margin-bottom: 6px;
+}
+
+.other__content--links .other__item > div {
+  font-size: 13px;
+  color: #738a94;
+  line-height: 1.5;
+}
+
+.tag-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+#tagFilterInput {
+  flex: 1;
+  min-width: 220px;
+  max-width: 420px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #dce2e8;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #15171a;
+  outline: none;
+  background-color: #f9fbfc;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+#tagFilterInput:focus {
+  border-color: #3eb0ef;
+  background-color: #fff;
+}
+
+.tag-filter-bar__count {
+  font-size: 13px;
+  color: #738a94;
+}
+
+.other__content--tags .tag-pill-list,
+.other__content--categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.other__content--tags .other__item,
+.other__content--categories .other__item {
+  width: auto;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #f4f7fa;
+  border: 1px solid #e6ecf1;
+  border-radius: 18px;
+  line-height: 1.4;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.other__content--tags .other__item:hover,
+.other__content--categories .other__item:hover {
+  background-color: #eef6fc;
+  border-color: #3eb0ef;
+}
+
+.other__content--archives {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.other__content--archives .other__item--archive {
+  width: auto;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid #e6ebf1;
+  border-radius: 6px;
+  background-color: #fafbfc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 9. Floating Back-to-Top button */
+.solo-back-top {
+  position: fixed;
+  right: 22px;
+  bottom: 28px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(115, 138, 148, 0.25);
+  background: rgba(255, 255, 255, 0.94);
+  color: #15171a;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease, background-color 0.2s ease;
+  z-index: 45;
+}
+
+.solo-back-top--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.solo-back-top:hover {
+  background: #3eb0ef;
+  border-color: #3eb0ef;
+  color: #fff;
+}
+
+/* 10. Mobile responsiveness (<= 768px) */
+@media (max-width: 768px) {
+  .header__nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 44px;
+    padding: 4px 12px;
+  }
+
+  .header__nav-toggle {
+    display: inline-flex;
+  }
+
+  .header__nav-links {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 10px;
+    right: 10px;
+    background: rgba(15, 17, 21, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    z-index: 60;
+  }
+
+  .header__nav--open .header__nav-links {
+    display: block;
+  }
+
+  .header__nav-links > a {
+    float: none;
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 4px 8px;
+    margin: 2px 0;
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .header__nav-links > a:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .header__nav-links .fn__right {
+    float: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .header__nav-links .fn__right a {
+    float: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 8px;
+    margin: 0;
+    line-height: 36px;
+  }
+
+  .header__h2 {
+    margin-bottom: 24px;
+  }
+
+  .article__top {
+    height: 44px;
+    padding: 0 10px;
+  }
+
+  .article__top > .fn__clear {
+    height: 41px;
+  }
+
+  .article__top .toc {
+    padding: 0 12px;
+    line-height: 41px;
+    min-height: 41px;
+    font-weight: 500;
+  }
+
+  .article__top .article__share .item {
+    height: 41px;
+    width: 41px;
+    padding: 10px 0;
+  }
+
+  .article__progress {
+    width: calc(100% + 20px);
+    margin: 0 -10px;
+  }
+
+  .article .item__title {
+    padding: 0 16px;
+    font-size: 24px;
+    line-height: 1.4;
+    box-sizing: border-box;
+    margin-bottom: 24px;
+  }
+
+  .article .item__content {
+    padding: 16px 16px 0;
+  }
+
+  .other__content {
+    padding: 20px 16px;
+  }
+
+  .solo-back-top {
+    right: 14px;
+    bottom: 20px;
+    width: 38px;
+    height: 38px;
+  }
+}

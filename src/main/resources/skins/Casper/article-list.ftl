@@ -50,7 +50,7 @@
             <a class="item__abstract" pjax-title="${article.articleTitle?html}"
                href="${servePath}${article.articlePermalink}">
                 <#if article.articleAbstractText?length gt 80>
-                    ${article.articleAbstractText[0..80]}
+                    ${article.articleAbstractText[0..80]}...
                 <#else>
                     ${article.articleAbstractText}
                 </#if>

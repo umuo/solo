@@ -17,6 +17,7 @@
 <head>
 <@head title="${allTagsLabel} - ${blogTitle}">
     <link rel="stylesheet" href="${staticServePath}/skins/${skinDirName}/css/base.css?${staticResourceVersion}"/>
+    <link rel="stylesheet" href="${servePath}/skins/${skinDirName}/css/custom.css?${staticResourceVersion}"/>
 </@head>
 </head>
 <body class="fn__flex-column">
@@ -29,7 +30,8 @@
         <div class="other__meta">
         ${tags?size} ${tagLabel}
         </div>
-        <div class="other__content">
+        <#if mostUsedCategories?? && mostUsedCategories?size &gt; 0>
+        <div class="other__content other__content--categories">
          <#list mostUsedCategories as category>
              <span class="other__item--archive other__item">
                  <a href="${servePath}/category/${category.categoryURI}">
@@ -39,7 +41,13 @@
              </span>
          </#list>
         </div>
-        <div class="other__content">
+        </#if>
+        <div class="other__content other__content--tags">
+        <div class="tag-filter-bar">
+            <input id="tagFilterInput" type="search" placeholder="输入关键词快速筛选标签（共 ${tags?size} 个）..." autocomplete="off"/>
+            <span id="tagFilterCount" class="tag-filter-bar__count"></span>
+        </div>
+        <div class="tag-pill-list">
         <#list tags as tag>
             <span class="other__item other__item--archive">
                  <a rel="tag" data-count="${tag.tagPublishedRefCount}" class="tag"
@@ -49,6 +57,7 @@
                 <span>${tag.tagPublishedRefCount} ${countLabel}</span>
             </span>
         </#list>
+        </div>
         </div>
     </div>
     <#if pjax><!---- pjax {#pjax} end ----></#if>

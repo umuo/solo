@@ -19,6 +19,8 @@
     <@head title="${article.articleTitle?html} - ${blogTitle}" description="${article.articleAbstract?html}">
         <link rel="stylesheet"
               href="${staticServePath}/skins/${skinDirName}/css/base.css?${staticResourceVersion}"/>
+        <link rel="stylesheet"
+              href="${servePath}/skins/${skinDirName}/css/custom.css?${staticResourceVersion}"/>
         <#if previousArticlePermalink??>
             <link rel="prev" title="${previousArticleTitle?html}" href="${servePath}${previousArticlePermalink}">
         </#if>
@@ -87,8 +89,12 @@
                 <#if 0 != externalRelevantArticlesDisplayCount>
                     <div class="item" id="externalRelevantArticles"></div>
                 </#if>
-                <div class="item" id="randomArticles"></div>
-                <div class="item" id="relevantArticles"></div>
+                <#if 0 != randomArticlesDisplayCount>
+                    <div class="item" id="randomArticles"></div>
+                </#if>
+                <#if 0 != relevantArticlesDisplayCount>
+                    <div class="item" id="relevantArticles"></div>
+                </#if>
             </div>
         </div>
     </div>

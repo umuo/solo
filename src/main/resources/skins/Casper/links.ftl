@@ -17,6 +17,7 @@
 <head>
 <@head title="${linkLabel} - ${blogTitle}">
     <link rel="stylesheet" href="${staticServePath}/skins/${skinDirName}/css/base.css?${staticResourceVersion}"/>
+    <link rel="stylesheet" href="${servePath}/skins/${skinDirName}/css/custom.css?${staticResourceVersion}"/>
 </@head>
 </head>
 <body class="fn__flex-column">
@@ -29,7 +30,7 @@
         <div class="other__meta">
         ${links?size} ${linkLabel}
         </div>
-        <div class="other__content">
+        <div class="other__content other__content--links">
         <#if 0 != links?size>
             <#list links as link>
                 <div class="other__item">

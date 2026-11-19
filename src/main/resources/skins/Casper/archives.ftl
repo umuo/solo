@@ -17,6 +17,7 @@
 <head>
 <@head title="${archiveLabel} - ${blogTitle}">
     <link rel="stylesheet" href="${staticServePath}/skins/${skinDirName}/css/base.css?${staticResourceVersion}"/>
+    <link rel="stylesheet" href="${servePath}/skins/${skinDirName}/css/custom.css?${staticResourceVersion}"/>
 </@head>
 </head>
 <body class="fn__flex-column">
@@ -30,7 +31,7 @@
         ${archiveDates?size} ${cntMonthLabel}
         ${statistic.statisticPublishedBlogArticleCount} ${cntArticleLabel}
         </div>
-        <div class="other__content">
+        <div class="other__content other__content--archives">
             <#if 0 != archiveDates?size>
             <#list archiveDates as archiveDate>
                 <div class="other__item other__item--archive">

@@ -17,6 +17,7 @@
 <head>
 <@head title="${category.categoryTitle} - ${blogTitle}">
     <link rel="stylesheet" href="${staticServePath}/skins/${skinDirName}/css/base.css?${staticResourceVersion}"/>
+    <link rel="stylesheet" href="${servePath}/skins/${skinDirName}/css/custom.css?${staticResourceVersion}"/>
 </@head>
 </head>
 <body class="fn__flex-column">
