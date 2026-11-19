@@ -607,6 +607,7 @@ body {
 .treehole-hero__title {
   margin: 0 0 10px;
   color: #fff;
+  font-family: "LXGW WenKai", "STKaiti", "Kaiti SC", "KaiTi", serif;
   font-size: 38px;
   font-weight: 700;
   letter-spacing: 3px;
@@ -650,7 +651,11 @@ body {
 
 .treehole-card {
   position: relative;
+  width: 100%;
   max-width: 760px;
+  height: 420px;
+  display: flex;
+  flex-direction: column;
   margin: 0 auto 48px;
   background-color: #fff;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 180' preserveAspectRatio='none'%3E%3Cpath d='M0,120 C180,65 360,165 560,110 C680,78 750,95 800,115 L800,180 L0,180 Z' fill='%23eef6fc' fill-opacity='0.75'/%3E%3Cpath d='M0,145 C220,105 420,175 640,130 C720,114 770,128 800,138 L800,180 L0,180 Z' fill='%23e6f7f5' fill-opacity='0.65'/%3E%3C/svg%3E");
@@ -658,18 +663,19 @@ body {
   background-position: bottom center;
   background-size: 100% 170px;
   border-radius: 18px;
-  padding: 32px 40px 28px;
+  padding: 28px 40px 24px;
   box-shadow: 0 18px 48px rgba(21, 23, 26, 0.1), 0 3px 12px rgba(21, 23, 26, 0.04);
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .treehole-card__meta {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
@@ -707,17 +713,46 @@ body {
 }
 
 .treehole-card__body {
-  min-height: 170px;
-  font-size: 16.5px;
-  line-height: 1.95;
-  color: #2c353d;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  padding-right: 6px;
+  font-family: "Caveat", "LXGW WenKai", "STKaiti", "Kaiti SC", "KaiTi", "FangSong", "Georgia", cursive, serif;
+  font-size: 20px;
+  line-height: 1.9;
+  letter-spacing: 0.4px;
+  color: #2b343d;
   word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.38) transparent;
   transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.treehole-card__body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.treehole-card__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.treehole-card__body::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.38);
+  border-radius: 999px;
 }
 
 .treehole-card__body.is-switching {
   opacity: 0.3;
   transform: translateY(4px);
+}
+
+.treehole-card__letter {
+  margin: auto 0;
+  width: 100%;
 }
 
 .treehole-card__body p {
@@ -732,16 +767,19 @@ body {
 .treehole-card__empty {
   color: #738a94;
   text-align: center;
-  padding: 46px 0;
+  margin: auto;
+  padding: 0;
+  font-size: 18px;
 }
 
 .treehole-card__footer {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 28px;
-  padding-top: 22px;
+  margin-top: 16px;
+  padding-top: 18px;
   border-top: 1px solid rgba(226, 232, 240, 0.85);
 }
 
@@ -913,8 +951,9 @@ body {
   border-radius: 10px;
   background-color: #fafbfc;
   color: #1e293b;
-  font-size: 14.5px;
-  line-height: 1.65;
+  font-family: "Caveat", "LXGW WenKai", "STKaiti", "Kaiti SC", "KaiTi", serif;
+  font-size: 17.5px;
+  line-height: 1.75;
   box-sizing: border-box;
   resize: vertical;
   transition: border-color 0.2s ease, background-color 0.2s ease;
@@ -1038,21 +1077,22 @@ body {
   }
 
   .treehole-card {
-    padding: 22px 20px 20px;
+    height: 380px;
+    padding: 20px 20px 18px;
     border-radius: 16px;
     margin-bottom: 28px;
     background-size: 100% 130px;
   }
 
   .treehole-card__body {
-    min-height: 150px;
-    font-size: 15.5px;
+    min-height: 0;
+    font-size: 18px;
     line-height: 1.85;
   }
 
   .treehole-card__footer {
-    margin-top: 22px;
-    padding-top: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
   }
 
   .treehole-btn {

@@ -16,6 +16,8 @@
 <html>
 <head>
     <@head title="树洞 - ${blogTitle}">
+        <link id="soloTreeHoleFontEn" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/caveat@5.0.8/500.css"/>
+        <link id="soloTreeHoleFontZh" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css"/>
         <style>
             * { box-sizing: border-box; }
             body {
@@ -43,7 +45,7 @@
             }
             .th-fallback-nav a { color: rgba(255,255,255,0.88); text-decoration: none; margin-right: 16px; }
             .th-fallback-nav a:hover { color: #fff; }
-            .th-fallback-hero h1 { margin: 0 0 8px; font-size: 32px; letter-spacing: 2px; }
+            .th-fallback-hero h1 { margin: 0 0 8px; font-family: "LXGW WenKai", "STKaiti", "Kaiti SC", "KaiTi", serif; font-size: 32px; letter-spacing: 2px; }
             .th-fallback-hero p { margin: 0 0 18px; color: rgba(255,255,255,0.85); font-size: 14px; }
             .th-fallback-cta {
                 background: linear-gradient(135deg, #29b6f6, #0288d1);
@@ -54,23 +56,30 @@
                 width: 100%; max-width: 740px; margin: -68px auto 48px; padding: 0 16px; flex: 1;
             }
             .th-fallback-card {
-                background: #fff; border-radius: 16px; padding: 28px 32px;
+                background: #fff; border-radius: 16px; padding: 26px 32px 22px;
+                height: 420px; display: flex; flex-direction: column;
                 box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
             }
             .th-fallback-meta {
+                flex-shrink: 0;
                 display: flex; justify-content: space-between; align-items: center;
-                margin-bottom: 20px; font-size: 13px; color: #64748b;
+                margin-bottom: 16px; font-size: 13px; color: #64748b;
             }
             .th-fallback-no {
                 background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 999px; font-weight: 600;
             }
             .th-fallback-body {
-                min-height: 150px; font-size: 16px; line-height: 1.9; color: #2c353d;
+                flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; padding-right: 6px;
+                font-family: "Caveat", "LXGW WenKai", "STKaiti", "Kaiti SC", "KaiTi", "FangSong", "Georgia", cursive, serif;
+                font-size: 20px; line-height: 1.9; color: #2c353d; word-break: break-word;
             }
+            .th-fallback-letter { margin: auto 0; width: 100%; }
             .th-fallback-body p { margin: 0 0 12px; }
+            .th-fallback-body p:last-child { margin-bottom: 0; }
             .th-fallback-footer {
+                flex-shrink: 0;
                 display: flex; justify-content: space-between; align-items: center;
-                border-top: 1px solid #f1f5f9; margin-top: 22px; padding-top: 18px;
+                border-top: 1px solid #f1f5f9; margin-top: 16px; padding-top: 16px;
             }
             .th-fallback-btn {
                 border-radius: 999px; padding: 8px 18px; font-size: 14px; cursor: pointer; border: 1px solid #f4c2c2; background: #fff; color: #e25555;
@@ -86,7 +95,11 @@
             .treehole-modal__title { margin: 0; font-size: 17px; }
             .treehole-modal__close { border: none; background: transparent; font-size: 22px; cursor: pointer; color: #64748b; }
             .treehole-textarea-wrap { position: relative; }
-            .treehole-textarea-wrap textarea { width: 100%; min-height: 136px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 12px 28px; font-size: 14px; resize: vertical; }
+            .treehole-textarea-wrap textarea { width: 100%; min-height: 136px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 12px 28px; font-family: "Caveat", "LXGW WenKai", "STKaiti", "Kaiti SC", "KaiTi", serif; font-size: 17.5px; line-height: 1.75; resize: vertical; }
+            @media (max-width: 768px) {
+                .th-fallback-card { height: 380px; padding: 20px 20px 18px; }
+                .th-fallback-body { font-size: 18px; line-height: 1.85; }
+            }
             .treehole-char-count { position: absolute; right: 12px; bottom: 8px; font-size: 12px; color: #94a3b8; }
             .treehole-modal__note { font-size: 12px; color: #64748b; margin: 10px 0 8px; }
             .treehole-modal__error { color: #dc2626; font-size: 13px; min-height: 18px; }
@@ -179,7 +192,10 @@
   }
   function renderBody (text) {
     var parts = decodeOnce(text).replace(/\r\n/g, '\n').split(/\n{2,}/)
+    bodyEl.scrollTop = 0
     bodyEl.innerHTML = ''
+    var wrap = document.createElement('div')
+    wrap.className = 'th-fallback-letter'
     for (var i = 0; i < parts.length; i++) {
       var p = document.createElement('p')
       var lines = parts[i].split('\n')
@@ -187,8 +203,9 @@
         if (j > 0) p.appendChild(document.createElement('br'))
         p.appendChild(document.createTextNode(lines[j]))
       }
-      bodyEl.appendChild(p)
+      wrap.appendChild(p)
     }
+    bodyEl.appendChild(wrap)
   }
   function showToast (msg) {
     toastEl.textContent = msg

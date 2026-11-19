@@ -17,6 +17,8 @@
 <head>
 <@head title="树洞 - ${blogTitle}">
     <link rel="stylesheet" href="${staticServePath}/skins/${skinDirName}/css/base.css?${staticResourceVersion}"/>
+    <link id="soloTreeHoleFontEn" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/caveat@5.0.8/500.css"/>
+    <link id="soloTreeHoleFontZh" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css"/>
     <link rel="stylesheet" href="${servePath}/skins/${skinDirName}/css/custom.css?${staticResourceVersion}"/>
 </@head>
 </head>

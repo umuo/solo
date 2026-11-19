@@ -424,12 +424,33 @@
     })
   }
 
+  function ensureTreeHoleFonts () {
+    var head = document.head || document.getElementsByTagName('head')[0]
+    if (!head) {
+      return
+    }
+    var fonts = [
+      { id: 'soloTreeHoleFontEn', href: 'https://cdn.jsdelivr.net/npm/@fontsource/caveat@5.0.8/500.css' },
+      { id: 'soloTreeHoleFontZh', href: 'https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/lxgwwenkai-regular.css' }
+    ]
+    for (var i = 0; i < fonts.length; i++) {
+      if (!document.getElementById(fonts[i].id)) {
+        var link = document.createElement('link')
+        link.id = fonts[i].id
+        link.rel = 'stylesheet'
+        link.href = fonts[i].href
+        head.appendChild(link)
+      }
+    }
+  }
+
   function initTreeHolePage () {
     var app = document.getElementById('treeHoleApp')
     if (!app || app.getAttribute('data-th-bound') === '1') {
       return
     }
     app.setAttribute('data-th-bound', '1')
+    ensureTreeHoleFonts()
     bindTreeHoleEsc()
 
     var servePath = (app.getAttribute('data-serve-path') || (window.Label && window.Label.servePath) || '').replace(/\/$/, '')
@@ -477,7 +498,10 @@
       var decoded = decodeTreeHoleEntitiesOnce(rawContent)
       var normalized = decoded.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
       var paragraphs = normalized.split(/\n{2,}/)
+      bodyEl.scrollTop = 0
       bodyEl.innerHTML = ''
+      var letterWrap = document.createElement('div')
+      letterWrap.className = 'treehole-card__letter'
       for (var i = 0; i < paragraphs.length; i++) {
         var pEl = document.createElement('p')
         var lines = paragraphs[i].split('\n')
@@ -487,8 +511,9 @@
           }
           pEl.appendChild(document.createTextNode(lines[j]))
         }
-        bodyEl.appendChild(pEl)
+        letterWrap.appendChild(pEl)
       }
+      bodyEl.appendChild(letterWrap)
     }
 
     function applyMessage (msg) {
