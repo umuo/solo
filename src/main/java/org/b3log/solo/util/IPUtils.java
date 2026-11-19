@@ -18,15 +18,17 @@ import org.apache.logging.log4j.Logger;
 import org.b3log.latke.http.Request;
 import org.lionsoul.ip2region.DataBlock;
 import org.lionsoul.ip2region.DbConfig;
-import org.lionsoul.ip2region.DbMakerConfigException;
 import org.lionsoul.ip2region.DbSearcher;
 
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 /**
  * @author: gitsilence
- * @description:
+ * @description: IP lookup utility
  * @date: 2021/6/26 1:34 下午
  **/
 public class IPUtils {
@@ -37,44 +39,49 @@ public class IPUtils {
 
     private static final String UNKNOWN = "unknown";
 
-
-    private IPUtils () {}
+    private IPUtils() {
+    }
 
     static {
-        String path = IPUtils.class.getResource("/files/ip2region.db").getPath();
-        LOGGER.log(Level.INFO, "file path is ---------------->>>>>>  " + path);
         try {
-            dbSearcher = new DbSearcher(new DbConfig(), path);
-        } catch (FileNotFoundException e) {
-            LOGGER.log(Level.ERROR, e.getMessage());
-        } catch (DbMakerConfigException e) {
-            LOGGER.log(Level.ERROR, e.getMessage());
+            final URL url = IPUtils.class.getResource("/files/ip2region.db");
+            if (null != url) {
+                final String path = URLDecoder.decode(url.getPath(), StandardCharsets.UTF_8);
+                final File dbFile = new File(path);
+                if (dbFile.isFile()) {
+                    dbSearcher = new DbSearcher(new DbConfig(), path);
+                } else {
+                    LOGGER.log(Level.WARN, "ip2region.db not found on filesystem: {}", path);
+                }
+            }
+        } catch (final Exception e) {
+            LOGGER.log(Level.WARN, "Failed to initialize ip2region DbSearcher: {}", e.getMessage());
         }
     }
 
-    public static String getRegion (String ip) {
-        if (StringUtils.isBlank(ip)) {
-            LOGGER.info("The ip is empty ...");
+    public static String getRegion(final String ip) {
+        if (StringUtils.isBlank(ip) || null == dbSearcher) {
             return "";
         }
-        LOGGER.info("current ip is --->>> {}", ip);
         try {
-            DataBlock dataBlock = dbSearcher.btreeSearch(ip);
+            final DataBlock dataBlock = dbSearcher.btreeSearch(ip);
+            if (null == dataBlock) {
+                return "";
+            }
             return ipFilter(dataBlock.getRegion());
-        } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.error("get region exception : ", e);
+        } catch (final Exception e) {
+            LOGGER.log(Level.DEBUG, "get region failed for ip [{}]: {}", ip, e.getMessage());
+            return "";
         }
-        return "";
     }
 
-    public static String ipFilter (String region) {
+    public static String ipFilter(final String region) {
         return Optional.ofNullable(region)
                 .orElse("").replace("0", "")
                 .replaceAll("\\|+", "-");
     }
 
-    public static String getRealIp (Request request) {
+    public static String getRealIp(final Request request) {
         String ip = "";
         try {
             ip = request.getHeader("X-forwarded-for");
@@ -93,7 +100,7 @@ public class IPUtils {
             if (StringUtils.isEmpty(ip) || UNKNOWN.equalsIgnoreCase(ip)) {
                 ip = request.getRemoteAddr();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOGGER.error("IPUtils ERROR ", e);
         }
         // 使用代理，则获取第一个ip地址
@@ -104,5 +111,4 @@ public class IPUtils {
         }
         return ip;
     }
-
 }

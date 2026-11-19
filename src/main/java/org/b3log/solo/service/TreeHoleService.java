@@ -25,7 +25,6 @@ import org.b3log.solo.model.TreeHole;
 import org.b3log.solo.repository.TreeHoleRepository;
 import org.json.JSONObject;
 
-
 /**
  * @author: gitsilence
  * @description: 树洞业务逻辑层
@@ -36,61 +35,109 @@ public class TreeHoleService {
 
     private static final Logger LOGGER = LogManager.getLogger(TreeHoleService.class);
 
+    private static final int MAX_CONTENT_LENGTH = 5000;
+
     @Inject
     private TreeHoleRepository treeHoleRepository;
 
-    public String addMessage(JSONObject requestJSON) throws ServiceException {
-        Transaction transaction = treeHoleRepository.beginTransaction();
-        try {
-            JSONObject treeHole = requestJSON.getJSONObject(TreeHole.hole);
-            String ret = treeHole.optString(Keys.OBJECT_ID);
-            /* 为空的字段 设置默认值 */
-            // 设置id
-            if (StringUtils.isBlank(ret)) {
-                ret = Ids.genTimeMillisId();
-                treeHole.put(Keys.OBJECT_ID, ret);
+    /**
+     * Escapes HTML metacharacters while keeping Unicode characters and line breaks intact.
+     *
+     * @param input raw user input
+     * @return HTML-escaped string
+     */
+    public static String sanitizeHtml(final String input) {
+        if (null == input) {
+            return "";
+        }
+        final StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            final char c = input.charAt(i);
+            switch (c) {
+                case '&':
+                    sb.append("&amp;");
+                    break;
+                case '<':
+                    sb.append("&lt;");
+                    break;
+                case '>':
+                    sb.append("&gt;");
+                    break;
+                case '"':
+                    sb.append("&quot;");
+                    break;
+                case '\'':
+                    sb.append("&#39;");
+                    break;
+                default:
+                    sb.append(c);
             }
-            // 创建时间
-            treeHole.put(TreeHole.createTime, System.currentTimeMillis());
-            // 是否展示，默认 不展示，设置为0
-            treeHole.put(TreeHole.isShow, 0);
-            // 点赞数
-            treeHole.put(TreeHole.likeCount, 0);
-            // 随机数
-            treeHole.put(TreeHole.hole_random_double, Math.random());
-            // 被查看的数量
-            treeHole.put(TreeHole.watchedCount, 0);
-            treeHoleRepository.add(treeHole);
+        }
+        return sb.toString();
+    }
+
+    public String addMessage(final JSONObject requestJSON) throws ServiceException {
+        if (null == requestJSON) {
+            throw new ServiceException("留言内容不能为空");
+        }
+        final JSONObject input = requestJSON.optJSONObject(TreeHole.hole);
+        if (null == input) {
+            throw new ServiceException("留言内容不能为空");
+        }
+
+        final String rawContent = StringUtils.trimToEmpty(input.optString(TreeHole.content));
+        if (StringUtils.isBlank(rawContent)) {
+            throw new ServiceException("留言内容不能为空");
+        }
+        if (rawContent.length() > MAX_CONTENT_LENGTH) {
+            throw new ServiceException("留言内容过长");
+        }
+
+        final Transaction transaction = treeHoleRepository.beginTransaction();
+        try {
+            final String ret = Ids.genTimeMillisId();
+            // Build record strictly from whitelisted fields to prevent client-side tampering (e.g. isShow, likeCount)
+            final JSONObject record = new JSONObject();
+            record.put(Keys.OBJECT_ID, ret);
+            record.put(TreeHole.content, sanitizeHtml(rawContent));
+            record.put(TreeHole.clientIp, StringUtils.defaultString(input.optString(TreeHole.clientIp), ""));
+            record.put(TreeHole.location, StringUtils.defaultString(input.optString(TreeHole.location), ""));
+            record.put(TreeHole.createTime, String.valueOf(System.currentTimeMillis()));
+            record.put(TreeHole.isShow, 0);
+            record.put(TreeHole.likeCount, 0);
+            record.put(TreeHole.hole_random_double, Math.random());
+            record.put(TreeHole.watchedCount, 0);
+
+            treeHoleRepository.add(record);
             transaction.commit();
             return ret;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             if (transaction.isActive()) {
                 transaction.rollback();
             }
-            throw new ServiceException(e.getMessage());
+            throw new ServiceException(e);
         }
     }
 
-    public JSONObject getRandomMessage(Session session) throws ServiceException {
+    public JSONObject getRandomMessage(final Session session) throws ServiceException {
         return treeHoleRepository.getRandom(session);
     }
 
-    public long countByIp(long todayDate, String realIp) {
-        return treeHoleRepository.countByIp (todayDate, realIp);
+    public long countByIp(final long todayDate, final String realIp) {
+        return treeHoleRepository.countByIp(todayDate, realIp);
     }
 
-    public void updateCountById(String column, String id) {
-        // 当涉及到 增删改 的时候，需要开启事务
-        Transaction transaction = treeHoleRepository.beginTransaction();
+    public void updateCountById(final String column, final String id) throws ServiceException {
+        final Transaction transaction = treeHoleRepository.beginTransaction();
         try {
-            treeHoleRepository.updateCountById (column, id);
+            treeHoleRepository.updateCountById(column, id);
             transaction.commit();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             if (transaction.isActive()) {
                 transaction.rollback();
             }
-            LOGGER.error("update count ex, column: {}, id: {}, msg: {}", column,
-                    id, e.getMessage());
+            LOGGER.error("update count ex, column: {}, id: {}, msg: {}", column, id, e.getMessage());
+            throw new ServiceException(e);
         }
     }
 }

@@ -11,6 +11,7 @@
  */
 package org.b3log.solo.processor;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +38,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-
 /**
  * @author: gitsilence
  * @description: 树洞
@@ -58,117 +58,147 @@ public class TreeHoleProcessor {
 
     public static final Set<String> LIKED_SET = Collections.synchronizedSet(new HashSet<>());
 
-
-    public boolean checkIsAllowAdd (String content, String realIp) {
-        LocalDate now = LocalDate.now();
+    public boolean checkIsAllowAdd(final String content, final String realIp) {
+        final LocalDate now = LocalDate.now();
         LOGGER.info("Today date is {}", now.toString());
         // 获取当天日期的时间戳 13位的
-        long todayDate = now.atStartOfDay(ZoneOffset.ofHours(8)).toInstant().toEpochMilli();
-        long count = treeHoleService.countByIp (todayDate, realIp);
+        final long todayDate = now.atStartOfDay(ZoneOffset.ofHours(8)).toInstant().toEpochMilli();
+        final long count = treeHoleService.countByIp(todayDate, realIp);
         return count < Common.MAX_MES_DAY_COUNT;
     }
 
-    public void addMessage (final RequestContext context) {
+    public void addMessage(final RequestContext context) {
         setCrossOrigin(context.getResponse());
-        JsonRenderer renderer = new JsonRenderer();
+        final JsonRenderer renderer = new JsonRenderer();
         context.setRenderer(renderer);
-        JSONObject ret = new JSONObject();
+        final JSONObject ret = new JSONObject();
         if ("options".equalsIgnoreCase(context.getRequest().getMethod())) {
             renderer.setJSONObject(ret);
             return;
         }
-        // 客户端IP
-        String realIp = IPUtils.getRealIp(context.getRequest());
-        JSONObject requestJSON = context.requestJSON();
-        JSONObject jsonObject = requestJSON.getJSONObject(TreeHole.hole);
-        if (!checkIsAllowAdd(jsonObject.optString(TreeHole.content), realIp)) {
-            LOGGER.warn("the current IP {} can't be allowed to invoke...", realIp);
-            ret.put(Keys.CODE, StatusCodes.ERR);
-            ret.put(Keys.MSG, "not allowed");
-            renderer.setJSONObject(ret);
-            return;
-        }
+
+        final String realIp = IPUtils.getRealIp(context.getRequest());
         try {
-            LOGGER.log(Level.INFO, "add Message, request body: [ " + requestJSON.toString() + " ]");
+            final JSONObject requestJSON = context.requestJSON();
+            final JSONObject jsonObject = null == requestJSON ? null : requestJSON.optJSONObject(TreeHole.hole);
+            if (null == jsonObject || StringUtils.isBlank(jsonObject.optString(TreeHole.content))) {
+                ret.put(Keys.CODE, StatusCodes.ERR);
+                ret.put(Keys.MSG, "留言内容不能为空");
+                renderer.setJSONObject(ret);
+                return;
+            }
+
+            if (!checkIsAllowAdd(jsonObject.optString(TreeHole.content), realIp)) {
+                LOGGER.warn("the current IP {} can't be allowed to invoke...", realIp);
+                ret.put(Keys.CODE, StatusCodes.ERR);
+                ret.put(Keys.MSG, "not allowed");
+                renderer.setJSONObject(ret);
+                return;
+            }
+
+            LOGGER.log(Level.INFO, "add Message, request body: [{}]", requestJSON.toString());
             jsonObject.put(TreeHole.clientIp, realIp);
             jsonObject.put(TreeHole.location, IPUtils.getRegion(realIp));
-            String messageId = treeHoleService.addMessage (requestJSON);
+            final String messageId = treeHoleService.addMessage(requestJSON);
             ret.put(Keys.OBJECT_ID, messageId);
             ret.put(Keys.MSG, langPropsService.get("addSuccLabel"));
             ret.put(Keys.CODE, StatusCodes.SUCC);
-
             renderer.setJSONObject(ret);
-        } catch (Exception e) {
-            jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
-            renderer.setJSONObject(jsonObject);
-            jsonObject.put(Keys.MSG, e.getMessage());
+        } catch (final Exception e) {
+            final JSONObject err = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
+            err.put(Keys.MSG, StringUtils.defaultIfBlank(e.getMessage(), "add message failed"));
+            renderer.setJSONObject(err);
         }
     }
 
-    public void addLike (final RequestContext context) {
+    public void addLike(final RequestContext context) {
         setCrossOrigin(context.getResponse());
-        JsonRenderer renderer = new JsonRenderer();
+        final JsonRenderer renderer = new JsonRenderer();
         context.setRenderer(renderer);
-        String realIp = IPUtils.getRealIp(context.getRequest());
-        String id = context.pathVar(Keys.OBJECT_ID);
-        String likedKey = realIp + id;
-        if (LIKED_SET.contains(likedKey)){
-            JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
+        final String realIp = IPUtils.getRealIp(context.getRequest());
+        final String id = context.pathVar(Keys.OBJECT_ID);
+        if (StringUtils.isBlank(id)) {
+            final JSONObject err = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
+            err.put(Keys.MSG, "id is required");
+            renderer.setJSONObject(err);
+            return;
+        }
+
+        final String likedKey = realIp + id;
+        if (LIKED_SET.contains(likedKey)) {
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
             jsonObject.put(Keys.MSG, "已经点过赞了");
             renderer.setJSONObject(jsonObject);
             return;
         }
         try {
-            LIKED_SET.add(likedKey);
-            JSONObject ret = new JSONObject();
-            // http://xxxx.com/a/b/c/{oId} 获取oId的参数值
             treeHoleService.updateCountById(TreeHole.likeCount, id);
+            LIKED_SET.add(likedKey);
+            final JSONObject ret = new JSONObject();
             ret.put(Keys.OBJECT_ID, id);
             ret.put(Keys.MSG, langPropsService.get("addSuccLabel"));
             ret.put(Keys.CODE, StatusCodes.SUCC);
             renderer.setJSONObject(ret);
-        } catch (Exception e) {
-            JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
-            jsonObject.put(Keys.MSG, e.getMessage());
+        } catch (final Exception e) {
+            final JSONObject jsonObject = new JSONObject().put(Keys.CODE, StatusCodes.ERR);
+            jsonObject.put(Keys.MSG, StringUtils.defaultIfBlank(e.getMessage(), "like failed"));
             renderer.setJSONObject(jsonObject);
         }
     }
 
-    public void getRandomMessage (final RequestContext context) {
-        Response response = context.getResponse();
+    public void getRandomMessage(final RequestContext context) {
+        final Response response = context.getResponse();
         setCrossOrigin(response);
-        JsonRenderer renderer = new JsonRenderer();
+        final JsonRenderer renderer = new JsonRenderer();
         context.setRenderer(renderer);
-        JSONObject jsonObject = new JSONObject();
-        Request request = context.getRequest();
-        Session session = request.getSession();
-        JSONObject ret = getRandomly (IPUtils.getRealIp(request), session);
+        final JSONObject jsonObject = new JSONObject();
+        final Request request = context.getRequest();
+        final Session session = request.getSession();
+        final JSONObject ret = getRandomly(IPUtils.getRealIp(request), session);
         jsonObject.put(Common.RANDOM_TREE_HOLE, ret);
         renderer.setJSONObject(jsonObject);
     }
 
-    public JSONObject getRandomly (String clientIp, Session session) {
+    public JSONObject getRandomly(final String clientIp, final Session session) {
         try {
-            JSONObject randomMessage = treeHoleService.getRandomMessage(session);
-            String id = randomMessage.optString(Keys.OBJECT_ID);
-            String watchedKey = clientIp + id;
-            if (!WATCHED_SET.contains(watchedKey)) {
-                treeHoleService.updateCountById(TreeHole.watchedCount, randomMessage.optString(Keys.OBJECT_ID));
-                WATCHED_SET.add(watchedKey);
+            final JSONObject randomMessage = treeHoleService.getRandomMessage(session);
+            if (null == randomMessage) {
+                return new JSONObject();
             }
+            final String id = randomMessage.optString(Keys.OBJECT_ID);
+            if (StringUtils.isBlank(id)) {
+                return new JSONObject();
+            }
+
+            final String watchedKey = clientIp + id;
+            if (!WATCHED_SET.contains(watchedKey)) {
+                try {
+                    treeHoleService.updateCountById(TreeHole.watchedCount, id);
+                    WATCHED_SET.add(watchedKey);
+                } catch (final ServiceException e) {
+                    LOGGER.warn("update watchedCount failed for id {}: {}", id, e.getMessage());
+                }
+            }
+
+            // Defense-in-depth: escape raw angle brackets in case legacy database rows contain unescaped HTML.
+            final String rawContent = randomMessage.optString(TreeHole.content);
+            if (StringUtils.containsAny(rawContent, '<', '>')) {
+                randomMessage.put(TreeHole.content, rawContent.replace("<", "&lt;").replace(">", "&gt;"));
+            }
+
             randomMessage.remove(TreeHole.hole_random_double);
             randomMessage.remove(TreeHole.createTime);
             randomMessage.remove(TreeHole.isShow);
             randomMessage.remove(TreeHole.location);
             randomMessage.remove(TreeHole.clientIp);
             return randomMessage;
-        } catch (ServiceException e) {
+        } catch (final ServiceException e) {
             LOGGER.error("get Randomly , {}", e.getMessage());
             return new JSONObject();
         }
     }
 
-    public void setCrossOrigin (Response response) {
+    public void setCrossOrigin(final Response response) {
         response.addHeader("Access-Control-Allow-Origin", "*");
         // 解决post请求跨域，因为 解决POST请求跨域，会先发送一个options请求
         response.addHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT");

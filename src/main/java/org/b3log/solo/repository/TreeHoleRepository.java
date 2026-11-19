@@ -11,6 +11,7 @@
  */
 package org.b3log.solo.repository;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.b3log.latke.Keys;
@@ -23,11 +24,14 @@ import org.b3log.solo.model.TreeHole;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author: gitsilence
- * @description:
+ * @description: TreeHole repository
  * @date: 2021/6/26 11:15 上午
  **/
 @Repository
@@ -35,51 +39,97 @@ public class TreeHoleRepository extends AbstractRepository {
 
     private static final Logger LOGGER = LogManager.getLogger(TreeHoleRepository.class);
 
+    private static final int MAX_SESSION_SEEN_IDS = 200;
+
     /**
      * Constructs a repository with the specified name.
-     *
      */
     public TreeHoleRepository() {
         super(TreeHole.hole);
     }
 
-    public JSONObject getRandom (Session session) throws ServiceException {
+    /**
+     * Gets one random visible TreeHole message while deduplicating messages already seen in the session.
+     *
+     * @param session current HTTP session, may be {@code null}
+     * @return random visible message JSON, or empty JSON when none available
+     * @throws ServiceException if repository query fails
+     */
+    public JSONObject getRandom(final Session session) throws ServiceException {
         try {
-            String ids = session.getAttribute(Common.SESSION_LIST_KEY);
-            if (null == ids) {
-                ids = "\"\"";
+            final Set<String> seenIds = parseSeenIds(session);
+            long unseenCount = count(buildVisibleRandomQuery(seenIds));
+
+            if (0 == unseenCount && !seenIds.isEmpty()) {
+                // Current visible pool exhausted in this session; reset cycle and query all visible messages.
+                seenIds.clear();
+                unseenCount = count(buildVisibleRandomQuery(seenIds));
             }
-            if (ids.endsWith(",")) {
-                ids = ids.substring(0, ids.lastIndexOf(','));
+            if (0 == unseenCount) {
+                return new JSONObject();
             }
-            String sql = "SELECT * FROM b3_solo_hole WHERE createTime not in ( %s ) ORDER BY RAND() LIMIT 10";
-            List<JSONObject> select = super.select(String.format(sql, ids));
-            if (null == select || select.size() == 0) {
-//                ids = "''";
-                List<JSONObject> results = super.select(String.format(sql, ids));
-                if (null == results || results.size() == 0) {
-                    return new JSONObject();
+
+            final int bound = (int) Math.min(unseenCount, Integer.MAX_VALUE);
+            final int randomPage = ThreadLocalRandom.current().nextInt(bound) + 1;
+            final Query pageQuery = buildVisibleRandomQuery(seenIds)
+                    .setPage(randomPage, 1)
+                    .setPageCount(1)
+                    .addSort(Keys.OBJECT_ID, SortDirection.DESCENDING);
+            final List<JSONObject> records = getList(pageQuery);
+            if (records.isEmpty()) {
+                return new JSONObject();
+            }
+
+            final JSONObject picked = records.get(0);
+            if (null != session) {
+                final String pickedId = picked.optString(Keys.OBJECT_ID);
+                if (StringUtils.isNotBlank(pickedId)) {
+                    seenIds.add(pickedId);
+                    while (seenIds.size() > MAX_SESSION_SEEN_IDS) {
+                        final String oldest = seenIds.iterator().next();
+                        seenIds.remove(oldest);
+                    }
+                    session.setAttribute(Common.SESSION_LIST_KEY, String.join(",", seenIds));
                 }
-                JSONObject jsonObject = results.get(0);
-                session.setAttribute(Common.SESSION_LIST_KEY, ids + ",'" + jsonObject.optString(TreeHole.createTime) + "\",");
-                return results.get(0);
             }
-            JSONObject jsonObject = select.get(0);
-            session.setAttribute(Common.SESSION_LIST_KEY, ids + ",\"" + jsonObject.optString(TreeHole.createTime) + "\",");
-            return select.get(0);
-        } catch (Exception e) {
-            LOGGER.error("get random message failed ..");
+            return picked;
+        } catch (final Exception e) {
+            LOGGER.error("get random message failed", e);
             throw new ServiceException(e);
         }
     }
 
-//    @Override
-//    public List<JSONObject> getRandomly(int fetchSize) throws RepositoryException {
-//        String sql = "SELECT * FROM b3_solo_hole WHERE createTime >=" +
-//                " ( (SELECT MAX(createTime) FROM b3_solo_hole) - (SELECT MIN(createTime) FROM b3_solo_hole ) )" +
-//                " * RAND() + (SELECT MIN(createTime) FROM b3_solo_hole) order by RAND() LIMIT " + fetchSize;
-//        return super.select(sql);
-//    }
+    private Set<String> parseSeenIds(final Session session) {
+        final Set<String> seenIds = new LinkedHashSet<>();
+        if (null == session) {
+            return seenIds;
+        }
+        final Object attr = session.getAttribute(Common.SESSION_LIST_KEY);
+        if (!(attr instanceof String)) {
+            return seenIds;
+        }
+        final String raw = (String) attr;
+        if (StringUtils.isBlank(raw)) {
+            return seenIds;
+        }
+        for (final String part : raw.split(",")) {
+            final String cleaned = part.replace("'", "").replace("\"", "").trim();
+            if (StringUtils.isNotBlank(cleaned)) {
+                seenIds.add(cleaned);
+            }
+        }
+        return seenIds;
+    }
+
+    private Query buildVisibleRandomQuery(final Set<String> seenIds) {
+        final List<Filter> filters = new ArrayList<>();
+        filters.add(new PropertyFilter(TreeHole.isShow, FilterOperator.EQUAL, 1));
+        if (!seenIds.isEmpty()) {
+            filters.add(new PropertyFilter(Keys.OBJECT_ID, FilterOperator.NOT_IN, new ArrayList<>(seenIds)));
+        }
+        final Filter filter = 1 == filters.size() ? filters.get(0) : CompositeFilterOperator.and(filters);
+        return new Query().setFilter(filter);
+    }
 
     @Override
     public List<JSONObject> getRandomly(int fetchSize) throws RepositoryException {
@@ -131,7 +181,7 @@ public class TreeHoleRepository extends AbstractRepository {
         try {
             return count(query);
         } catch (RepositoryException e) {
-            e.printStackTrace();
+            LOGGER.error("countByIp failed", e);
             return Common.MAX_MES_DAY_COUNT;
         }
     }
@@ -139,7 +189,7 @@ public class TreeHoleRepository extends AbstractRepository {
     public void updateCountById(String column, String id) throws RepositoryException {
         JSONObject jsonObject = get(id);
         if (jsonObject == null) {
-            throw new RepositoryException();
+            throw new RepositoryException("TreeHole record not found [" + id + "]");
         }
         long count = jsonObject.optLong(column) + 1;
         jsonObject.put(column, count);
