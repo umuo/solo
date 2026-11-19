@@ -448,7 +448,9 @@ public final class Server extends BaseServer {
         /* 增加 树洞请求，不进行权限校验 */
         TreeHoleProcessor treeHoleProcessor = beanManager.getReference(TreeHoleProcessor.class);
         final Dispatcher.RouterGroup treeHoleGroup = Dispatcher.group();
-        treeHoleGroup.post("/hole/message/add", treeHoleProcessor::addMessage)
+        treeHoleGroup.get("/tree-hole", treeHoleProcessor::showTreeHolePage)
+                .get("/tree-hole.html", treeHoleProcessor::showTreeHolePage)
+                .post("/hole/message/add", treeHoleProcessor::addMessage)
                 .get("/hole/message/random", treeHoleProcessor::getRandomMessage)
                 .get("/hole/message/addLike/{oId}", treeHoleProcessor::addLike)
                 .options("/hole/message/add", treeHoleProcessor::addMessage);
@@ -540,6 +542,7 @@ public final class Server extends BaseServer {
                 "/admin-plugin-list.do",
                 "/admin-staticsite.do",
                 "/admin-apikey.do",
+                "/admin-treehole.do",
                 "/admin-main.do",
                 "/admin-about.do"}, adminConsole::showAdminFunctions);
 
@@ -615,6 +618,17 @@ public final class Server extends BaseServer {
                 put("/console/api-key/{id}", apiKeyConsole::updateApiKey).
                 delete("/console/api-key/{id}", apiKeyConsole::removeApiKeyById).
                 delete("/console/api-key", apiKeyConsole::removeApiKey);
+
+        final TreeHoleConsole treeHoleConsole = beanManager.getReference(TreeHoleConsole.class);
+        final Dispatcher.RouterGroup treeHoleConsoleGroup = Dispatcher.group();
+        treeHoleConsoleGroup.middlewares(consoleAdminAuthMidware::handle);
+        treeHoleConsoleGroup.get("/console/tree-hole/stats", treeHoleConsole::getStats).
+                get("/console/tree-hole/list", treeHoleConsole::getList).
+                put("/console/tree-hole/batch/status", treeHoleConsole::batchUpdateStatus).
+                post("/console/tree-hole/batch/delete", treeHoleConsole::batchRemoveMessages).
+                delete("/console/tree-hole/batch/delete", treeHoleConsole::batchRemoveMessages).
+                put("/console/tree-hole/{id}", treeHoleConsole::updateStatus).
+                delete("/console/tree-hole/{id}", treeHoleConsole::removeMessage);
 
         final SkinConsole skinConsole = beanManager.getReference(SkinConsole.class);
         final Dispatcher.RouterGroup skinConsoleGroup = Dispatcher.group();

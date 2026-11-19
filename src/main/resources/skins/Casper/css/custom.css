@@ -590,3 +590,478 @@ body {
     height: 38px;
   }
 }
+
+/* 11. TreeHole (树洞) page & modal */
+.treehole-page {
+  position: relative;
+  z-index: 1;
+  padding-bottom: 40px;
+}
+
+.treehole-hero {
+  margin-top: -265px;
+  margin-bottom: 34px;
+  text-align: center;
+}
+
+.treehole-hero__title {
+  margin: 0 0 10px;
+  color: #fff;
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  line-height: 1.25;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.treehole-hero__subtitle {
+  margin: 0 0 20px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 15px;
+  line-height: 1.6;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.treehole-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #32b8f6 0%, #0288d1 100%);
+  box-shadow: 0 8px 22px rgba(2, 136, 209, 0.35);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.treehole-hero__cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(2, 136, 209, 0.45);
+}
+
+.treehole-hero__cta:active {
+  transform: translateY(0);
+}
+
+.treehole-card {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto 48px;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 180' preserveAspectRatio='none'%3E%3Cpath d='M0,120 C180,65 360,165 560,110 C680,78 750,95 800,115 L800,180 L0,180 Z' fill='%23eef6fc' fill-opacity='0.75'/%3E%3Cpath d='M0,145 C220,105 420,175 640,130 C720,114 770,128 800,138 L800,180 L0,180 Z' fill='%23e6f7f5' fill-opacity='0.65'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: 100% 170px;
+  border-radius: 18px;
+  padding: 32px 40px 28px;
+  box-shadow: 0 18px 48px rgba(21, 23, 26, 0.1), 0 3px 12px rgba(21, 23, 26, 0.04);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.treehole-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.treehole-card__no {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+}
+
+.treehole-card__watched {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.treehole-card__watched strong {
+  color: #334155;
+  font-weight: 600;
+}
+
+.treehole-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.treehole-card__body {
+  min-height: 170px;
+  font-size: 16.5px;
+  line-height: 1.95;
+  color: #2c353d;
+  word-break: break-word;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.treehole-card__body.is-switching {
+  opacity: 0.3;
+  transform: translateY(4px);
+}
+
+.treehole-card__body p {
+  margin: 0 0 16px;
+}
+
+.treehole-card__body p:last-child {
+  margin-bottom: 0;
+}
+
+.treehole-card__loading,
+.treehole-card__empty {
+  color: #738a94;
+  text-align: center;
+  padding: 46px 0;
+}
+
+.treehole-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(226, 232, 240, 0.85);
+}
+
+.treehole-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.treehole-btn--like {
+  background-color: #fff;
+  border: 1px solid #f7c5c5;
+  color: #e25555;
+}
+
+.treehole-btn--like:hover:not(:disabled) {
+  background-color: #fff5f5;
+  border-color: #f19999;
+  transform: translateY(-1px);
+}
+
+.treehole-btn--like.is-liked {
+  background-color: #fff1f2;
+  border-color: #fb7185;
+  color: #e11d48;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.14);
+}
+
+.treehole-btn--like .treehole-heart {
+  font-size: 15px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.treehole-btn--like.is-liked .treehole-heart {
+  transform: scale(1.15);
+}
+
+.treehole-btn--like:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.treehole-btn--next {
+  background: linear-gradient(135deg, #3b9eff 0%, #2575fc 100%);
+  border: none;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(37, 117, 252, 0.26);
+}
+
+.treehole-btn--next:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(37, 117, 252, 0.36);
+}
+
+.treehole-btn--next:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* TreeHole submission modal */
+.treehole-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.treehole-modal.is-open {
+  display: flex;
+}
+
+.treehole-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(4px);
+}
+
+.treehole-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 24px 20px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+  box-sizing: border-box;
+  animation: treeholePopIn 0.2s ease-out;
+}
+
+@keyframes treeholePopIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.treehole-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.treehole-modal__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.treehole-modal__close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 24px;
+  line-height: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.treehole-modal__close:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.treehole-modal__body {
+  padding-top: 16px;
+}
+
+.treehole-textarea-wrap {
+  position: relative;
+}
+
+.treehole-textarea-wrap textarea {
+  width: 100%;
+  min-height: 152px;
+  padding: 14px 14px 32px;
+  border: 1px solid #dce2e8;
+  border-radius: 10px;
+  background-color: #fafbfc;
+  color: #1e293b;
+  font-size: 14.5px;
+  line-height: 1.65;
+  box-sizing: border-box;
+  resize: vertical;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.treehole-textarea-wrap textarea:focus {
+  border-color: #1fb5ad;
+  background-color: #fff;
+}
+
+.treehole-char-count {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  font-size: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.treehole-modal__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 4px;
+  font-size: 12.5px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.treehole-modal__error {
+  min-height: 18px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #e11d48;
+  line-height: 1.5;
+}
+
+.treehole-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.treehole-modal-btn {
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.treehole-modal-btn--cancel {
+  background: #fff;
+  border: 1px solid #dce2e8;
+  color: #475569;
+}
+
+.treehole-modal-btn--cancel:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.treehole-modal-btn--submit {
+  background: #159e96;
+  border: 1px solid #159e96;
+  color: #fff;
+}
+
+.treehole-modal-btn--submit:hover:not(:disabled) {
+  background: #11847d;
+  border-color: #11847d;
+}
+
+.treehole-modal-btn--submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.treehole-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 34px;
+  transform: translate(-50%, 12px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #fff;
+  font-size: 13.5px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index: 150;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+
+.treehole-toast.is-show {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+@media (max-width: 768px) {
+  .treehole-hero {
+    margin-top: -285px;
+    margin-bottom: 24px;
+  }
+
+  .treehole-hero__title {
+    font-size: 32px;
+  }
+
+  .treehole-hero__subtitle {
+    font-size: 13.5px;
+    margin-bottom: 16px;
+  }
+
+  .treehole-card {
+    padding: 22px 20px 20px;
+    border-radius: 16px;
+    margin-bottom: 28px;
+    background-size: 100% 130px;
+  }
+
+  .treehole-card__body {
+    min-height: 150px;
+    font-size: 15.5px;
+    line-height: 1.85;
+  }
+
+  .treehole-card__footer {
+    margin-top: 22px;
+    padding-top: 16px;
+  }
+
+  .treehole-btn {
+    padding: 0 16px;
+    height: 38px;
+    font-size: 13.5px;
+  }
+
+  .treehole-modal__dialog {
+    padding: 18px 18px 16px;
+  }
+}

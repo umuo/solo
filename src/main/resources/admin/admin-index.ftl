@@ -71,6 +71,15 @@
                     </li>
                 </ul>
             </li>
+            <li id="navTreeHoleItem">
+                <div id="tabs_treehole">
+                    <a href="#treehole">
+                        <span class="icon-cmts"></span> ${treeHoleMgmtLabel}
+                        <span id="treeHoleNavBadge" class="fn__none"
+                              style="background:#f59e0b;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;line-height:16px;margin-left:6px;vertical-align:middle;">0</span>
+                    </a>
+                </div>
+            </li>
             <li id="tools">
                 <div id="tabToolsTitle" onclick="admin.collapseNav(this)">
                     <span class="icon-setting"></span>
@@ -156,6 +165,7 @@
         <div id="tabsPanel_plugin-list" class="fn__none"></div>
         <div id="tabsPanel_staticsite" class="fn__none"></div>
         <div id="tabsPanel_apikey" class="fn__none"></div>
+        <div id="tabsPanel_treehole" class="fn__none"></div>
         <div id="tabsPanel_about" class="fn__none"></div>
     </div>
     <div class="fn__clear"></div>
@@ -168,6 +178,7 @@
 <script src="${staticServePath}/js/lib/vditor/dist/index.min.js?v=3.9.7"></script>
 <script src="${staticServePath}/js/admin/admin.min.js?${staticResourceVersion}"></script>
 <script src="${servePath}/js/admin/apikey.js?${staticResourceVersion}"></script>
+<script src="${servePath}/js/admin/treehole.js?${staticResourceVersion}"></script>
 ${plugins}
 <script>
   admin.init()

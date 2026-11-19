@@ -16,14 +16,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.b3log.latke.Keys;
 import org.b3log.latke.http.Session;
+import org.b3log.latke.model.Pagination;
 import org.b3log.latke.repository.*;
 import org.b3log.latke.repository.annotation.Repository;
 import org.b3log.latke.service.ServiceException;
+import org.b3log.latke.util.Paginator;
 import org.b3log.solo.model.Common;
 import org.b3log.solo.model.TreeHole;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -194,5 +197,116 @@ public class TreeHoleRepository extends AbstractRepository {
         long count = jsonObject.optLong(column) + 1;
         jsonObject.put(column, count);
         update(id, jsonObject, column);
+    }
+
+    /**
+     * Gets aggregate statistics for admin dashboard.
+     *
+     * @return stats JSON with totalCount, visibleCount, pendingCount, totalLikeCount, totalWatchedCount
+     * @throws RepositoryException if query fails
+     */
+    public JSONObject getStats() throws RepositoryException {
+        final long totalCount = count();
+        final long visibleCount = count(new Query().setFilter(new PropertyFilter(TreeHole.isShow, FilterOperator.EQUAL, 1)));
+        final long pendingCount = count(new Query().setFilter(new PropertyFilter(TreeHole.isShow, FilterOperator.EQUAL, 0)));
+
+        long totalLikeCount = 0L;
+        long totalWatchedCount = 0L;
+        final List<JSONObject> sumRows = select(
+                "SELECT COALESCE(SUM(likeCount), 0) AS `L`, COALESCE(SUM(watchedCount), 0) AS `W` FROM " + getName());
+        if (null != sumRows && !sumRows.isEmpty()) {
+            final JSONObject row = sumRows.get(0);
+            totalLikeCount = row.has("L") ? row.optLong("L", 0L) : row.optLong("l", 0L);
+            totalWatchedCount = row.has("W") ? row.optLong("W", 0L) : row.optLong("w", 0L);
+        }
+
+        final JSONObject stats = new JSONObject();
+        stats.put("totalCount", totalCount);
+        stats.put("visibleCount", visibleCount);
+        stats.put("pendingCount", pendingCount);
+        stats.put("totalLikeCount", totalLikeCount);
+        stats.put("totalWatchedCount", totalWatchedCount);
+        return stats;
+    }
+
+    /**
+     * Gets paginated TreeHole records for admin console with optional status filter and keyword search.
+     *
+     * @param pageNum      current page number (1-based)
+     * @param pageSize     page size
+     * @param statusFilter optional {@code 0} (pending) or {@code 1} (visible), or {@code null} for all
+     * @param keyword      optional keyword matching content, location, clientIp, or oId
+     * @return paginated JSON containing {@code pagination} and {@code holes}
+     * @throws RepositoryException if query fails
+     */
+    public JSONObject getAdminList(final int pageNum, final int pageSize, final Integer statusFilter, final String keyword)
+            throws RepositoryException {
+        final List<Filter> filters = new ArrayList<>();
+        if (null != statusFilter) {
+            filters.add(new PropertyFilter(TreeHole.isShow, FilterOperator.EQUAL, statusFilter));
+        }
+        if (StringUtils.isNotBlank(keyword)) {
+            final String likeVal = "%" + keyword.trim() + "%";
+            filters.add(CompositeFilterOperator.or(
+                    new PropertyFilter(TreeHole.content, FilterOperator.LIKE, likeVal),
+                    new PropertyFilter(TreeHole.location, FilterOperator.LIKE, likeVal),
+                    new PropertyFilter(TreeHole.clientIp, FilterOperator.LIKE, likeVal),
+                    new PropertyFilter(Keys.OBJECT_ID, FilterOperator.LIKE, likeVal)
+            ));
+        }
+
+        final Filter combinedFilter;
+        if (filters.isEmpty()) {
+            combinedFilter = null;
+        } else if (1 == filters.size()) {
+            combinedFilter = filters.get(0);
+        } else {
+            combinedFilter = CompositeFilterOperator.and(filters);
+        }
+
+        final Query countQuery = new Query();
+        if (null != combinedFilter) {
+            countQuery.setFilter(combinedFilter);
+        }
+        final long recordCount = count(countQuery);
+        final int pageCount = 0 == recordCount ? 1 : (int) Math.ceil(recordCount / (double) pageSize);
+
+        final Query query = new Query()
+                .setPage(pageNum, pageSize)
+                .setPageCount(1)
+                .addSort(TreeHole.createTime, SortDirection.DESCENDING)
+                .addSort(Keys.OBJECT_ID, SortDirection.DESCENDING);
+        if (null != combinedFilter) {
+            query.setFilter(combinedFilter);
+        }
+
+        final JSONObject result = get(query);
+        @SuppressWarnings("unchecked")
+        final List<JSONObject> records = null == result ? Collections.emptyList()
+                : (List<JSONObject>) result.opt(Keys.RESULTS);
+
+        final List<JSONObject> holes = new ArrayList<>();
+        if (null != records) {
+            for (final JSONObject record : records) {
+                final String rawContent = record.optString(TreeHole.content);
+                if (StringUtils.containsAny(rawContent, '<', '>')) {
+                    record.put(TreeHole.content, rawContent.replace("<", "&lt;").replace(">", "&gt;"));
+                }
+                record.remove(TreeHole.hole_random_double);
+                holes.add(record);
+            }
+        }
+
+        final JSONObject pagination = new JSONObject();
+        pagination.put(Pagination.PAGINATION_CURRENT_PAGE_NUM, pageNum);
+        pagination.put(Pagination.PAGINATION_PAGE_SIZE, pageSize);
+        pagination.put(Pagination.PAGINATION_PAGE_COUNT, pageCount);
+        pagination.put(Pagination.PAGINATION_RECORD_COUNT, recordCount);
+        pagination.put(Pagination.PAGINATION_PAGE_NUMS, Paginator.paginate(pageNum, pageSize, pageCount, 7));
+
+        final JSONObject ret = new JSONObject();
+        ret.put(Pagination.PAGINATION, pagination);
+        ret.put("holes", holes);
+        return ret;
     }
 }

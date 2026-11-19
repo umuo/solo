@@ -22,8 +22,13 @@ import org.b3log.latke.service.ServiceException;
 import org.b3log.latke.service.annotation.Service;
 import org.b3log.latke.util.Ids;
 import org.b3log.solo.model.TreeHole;
+import org.b3log.solo.processor.TreeHoleProcessor;
 import org.b3log.solo.repository.TreeHoleRepository;
 import org.json.JSONObject;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author: gitsilence
@@ -139,5 +144,133 @@ public class TreeHoleService {
             LOGGER.error("update count ex, column: {}, id: {}, msg: {}", column, id, e.getMessage());
             throw new ServiceException(e);
         }
+    }
+
+    /**
+     * Gets aggregate TreeHole statistics for admin console.
+     *
+     * @return stats JSON
+     * @throws ServiceException if query fails
+     */
+    public JSONObject getStats() throws ServiceException {
+        try {
+            return treeHoleRepository.getStats();
+        } catch (final Exception e) {
+            LOGGER.error("get tree hole stats failed", e);
+            throw new ServiceException(e);
+        }
+    }
+
+    /**
+     * Gets paginated TreeHole messages for admin console.
+     *
+     * @param pageNum      1-based page number
+     * @param pageSize     page size (clamped to 1..100)
+     * @param statusFilter optional {@code 0} or {@code 1}, or {@code null} for all
+     * @param keyword      optional search keyword
+     * @return paginated result JSON
+     * @throws ServiceException if query fails
+     */
+    public JSONObject getAdminList(final int pageNum, final int pageSize, final Integer statusFilter, final String keyword)
+            throws ServiceException {
+        final int safePageNum = Math.max(1, pageNum);
+        final int safePageSize = Math.min(100, Math.max(1, pageSize));
+        try {
+            return treeHoleRepository.getAdminList(safePageNum, safePageSize, statusFilter, keyword);
+        } catch (final Exception e) {
+            LOGGER.error("get tree hole admin list failed", e);
+            throw new ServiceException(e);
+        }
+    }
+
+    /**
+     * Updates visibility status ({@code isShow}) for the given TreeHole ids.
+     *
+     * @param ids    message ids
+     * @param isShow {@code 1} for visible, {@code 0} for hidden
+     * @return count of actually updated records
+     * @throws ServiceException if persistence fails
+     */
+    public int updateStatus(final List<String> ids, final int isShow) throws ServiceException {
+        final Set<String> uniqueIds = normalizeIds(ids);
+        if (uniqueIds.isEmpty()) {
+            return 0;
+        }
+        final int target = (1 == isShow) ? 1 : 0;
+
+        final Transaction transaction = treeHoleRepository.beginTransaction();
+        int updatedCount = 0;
+        try {
+            for (final String id : uniqueIds) {
+                final JSONObject existing = treeHoleRepository.get(id);
+                if (null != existing) {
+                    existing.put(TreeHole.isShow, target);
+                    treeHoleRepository.update(id, existing, TreeHole.isShow);
+                    updatedCount++;
+                }
+            }
+            transaction.commit();
+            return updatedCount;
+        } catch (final Exception e) {
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+            LOGGER.error("update tree hole status failed", e);
+            throw new ServiceException(e);
+        }
+    }
+
+    /**
+     * Deletes TreeHole messages by id list and clears in-memory view/like dedup entries for deleted ids.
+     *
+     * @param ids message ids
+     * @return count of deleted records
+     * @throws ServiceException if persistence fails
+     */
+    public int removeMessages(final List<String> ids) throws ServiceException {
+        final Set<String> uniqueIds = normalizeIds(ids);
+        if (uniqueIds.isEmpty()) {
+            return 0;
+        }
+
+        final Transaction transaction = treeHoleRepository.beginTransaction();
+        int deletedCount = 0;
+        final List<String> deletedIds = new java.util.ArrayList<>();
+        try {
+            for (final String id : uniqueIds) {
+                final JSONObject existing = treeHoleRepository.get(id);
+                if (null != existing) {
+                    treeHoleRepository.remove(id);
+                    deletedIds.add(id);
+                    deletedCount++;
+                }
+            }
+            transaction.commit();
+            for (final String deletedId : deletedIds) {
+                TreeHoleProcessor.WATCHED_SET.removeIf(key -> key.endsWith(deletedId));
+                TreeHoleProcessor.LIKED_SET.removeIf(key -> key.endsWith(deletedId));
+            }
+            return deletedCount;
+        } catch (final Exception e) {
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+            LOGGER.error("remove tree hole messages failed", e);
+            throw new ServiceException(e);
+        }
+    }
+
+    private Set<String> normalizeIds(final List<String> ids) {
+        final Set<String> uniqueIds = new LinkedHashSet<>();
+        if (null == ids) {
+            return uniqueIds;
+        }
+        for (final String id : ids) {
+            final String trimmed = StringUtils.trimToEmpty(id);
+            if (StringUtils.isNotBlank(trimmed)) {
+                uniqueIds.add(trimmed);
+            }
+        }
+        return uniqueIds;
     }
 }

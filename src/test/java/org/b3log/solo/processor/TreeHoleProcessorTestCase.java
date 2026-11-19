@@ -175,6 +175,42 @@ public class TreeHoleProcessorTestCase extends AbstractTestCase {
         Assert.assertNotEquals(new JSONObject(missingRes.getString()).getInt(Keys.CODE), 0);
     }
 
+    /**
+     * Verify /tree-hole and /tree-hole.html render public TreeHole page cleanly.
+     */
+    @Test(dependsOnMethods = "addLikeBehavior")
+    public void renderTreeHolePage() {
+        final MockRequest req = mockRequest();
+        req.setRequestURI("/tree-hole");
+        req.setMethod("GET");
+        final MockResponse res = mockResponse();
+        mockDispatcher(req, res);
+
+        final String html = res.getString();
+        Assert.assertTrue(StringUtils.contains(html, "treeHoleApp"), "/tree-hole should render treeHoleApp container");
+        Assert.assertTrue(StringUtils.contains(html, "树洞"), "/tree-hole should render title 树洞");
+
+        // Also test Casper template directly with skin=Casper query parameter
+        final MockRequest casperReq = mockRequest();
+        casperReq.setRequestURI("/tree-hole");
+        casperReq.setMethod("GET");
+        casperReq.setParameter("skin", "Casper");
+        final MockResponse casperRes = mockResponse();
+        mockDispatcher(casperReq, casperRes);
+        final String casperHtml = casperRes.getString();
+        Assert.assertTrue(StringUtils.contains(casperHtml, "treeHoleApp"));
+        Assert.assertTrue(StringUtils.contains(casperHtml, "treehole-card"));
+        Assert.assertTrue(StringUtils.contains(casperHtml, "treeHoleOpenModalBtn"));
+
+        // Also test .html route
+        final MockRequest htmlReq = mockRequest();
+        htmlReq.setRequestURI("/tree-hole.html");
+        htmlReq.setMethod("GET");
+        final MockResponse htmlRes = mockResponse();
+        mockDispatcher(htmlReq, htmlRes);
+        Assert.assertTrue(StringUtils.contains(htmlRes.getString(), "treeHoleApp"));
+    }
+
     private String insertVisibleRecord(final String id, final String content) throws Exception {
         final TreeHoleRepository repo = getTreeHoleRepository();
         final Transaction tx = repo.beginTransaction();

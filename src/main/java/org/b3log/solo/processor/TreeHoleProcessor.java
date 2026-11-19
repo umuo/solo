@@ -11,6 +11,7 @@
  */
 package org.b3log.solo.processor;
 
+import freemarker.template.Template;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -20,15 +21,21 @@ import org.b3log.latke.http.Request;
 import org.b3log.latke.http.RequestContext;
 import org.b3log.latke.http.Response;
 import org.b3log.latke.http.Session;
+import org.b3log.latke.http.renderer.AbstractFreeMarkerRenderer;
 import org.b3log.latke.http.renderer.JsonRenderer;
 import org.b3log.latke.ioc.Inject;
 import org.b3log.latke.ioc.Singleton;
 import org.b3log.latke.service.LangPropsService;
 import org.b3log.latke.service.ServiceException;
+import org.b3log.latke.util.Locales;
 import org.b3log.solo.model.Common;
+import org.b3log.solo.model.Option;
 import org.b3log.solo.model.TreeHole;
+import org.b3log.solo.service.DataModelService;
+import org.b3log.solo.service.OptionQueryService;
 import org.b3log.solo.service.TreeHoleService;
 import org.b3log.solo.util.IPUtils;
+import org.b3log.solo.util.Skins;
 import org.b3log.solo.util.StatusCodes;
 import org.json.JSONObject;
 
@@ -36,6 +43,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -52,11 +60,45 @@ public class TreeHoleProcessor {
     @Inject
     private LangPropsService langPropsService;
 
+    @Inject
+    private DataModelService dataModelService;
+
+    @Inject
+    private OptionQueryService optionQueryService;
+
     private static final Logger LOGGER = LogManager.getLogger(TreeHoleProcessor.class);
 
     public static final Set<String> WATCHED_SET = Collections.synchronizedSet(new HashSet<>());
 
     public static final Set<String> LIKED_SET = Collections.synchronizedSet(new HashSet<>());
+
+    /**
+     * Renders the public TreeHole page (/tree-hole).
+     *
+     * @param context the request context
+     */
+    public void showTreeHolePage(final RequestContext context) {
+        final Template skinTpl = Skins.getSkinTemplate(context, "tree-hole.ftl");
+        final String templateName = null != skinTpl ? "tree-hole.ftl" : "common-template/tree-hole.ftl";
+        final AbstractFreeMarkerRenderer renderer = new SkinRenderer(context, templateName);
+        final Map<String, Object> dataModel = renderer.getDataModel();
+        final Request request = context.getRequest();
+
+        try {
+            final Map<String, String> langs = langPropsService.getAll(Locales.getLocale(request));
+            dataModel.putAll(langs);
+            final JSONObject preference = optionQueryService.getPreference();
+            dataModelService.fillCommon(context, dataModel, preference);
+            dataModelService.fillFaviconURL(dataModel, preference);
+            dataModelService.fillUsite(dataModel);
+            dataModel.put(Option.ID_C_NOTICE_BOARD, preference.optString(Option.ID_C_NOTICE_BOARD, ""));
+            Skins.fillLangs(preference.optString(Option.ID_C_LOCALE_STRING),
+                    (String) context.attr(Keys.TEMPLATE_DIR_NAME), dataModel);
+        } catch (final Exception e) {
+            LOGGER.log(Level.ERROR, "Renders tree-hole page failed", e);
+            context.sendError(404);
+        }
+    }
 
     public boolean checkIsAllowAdd(final String content, final String realIp) {
         final LocalDate now = LocalDate.now();

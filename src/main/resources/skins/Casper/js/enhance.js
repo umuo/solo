@@ -334,7 +334,431 @@
     }
   }
 
+  function decodeTreeHoleEntitiesOnce (str) {
+    if (!str) {
+      return ''
+    }
+    return String(str).replace(/&(lt|gt|quot|#39|amp);/g, function (match, entity) {
+      if (entity === 'lt') {
+        return '<'
+      }
+      if (entity === 'gt') {
+        return '>'
+      }
+      if (entity === 'quot') {
+        return '"'
+      }
+      if (entity === '#39') {
+        return '\''
+      }
+      if (entity === 'amp') {
+        return '&'
+      }
+      return match
+    })
+  }
+
+  function getTodayLikeStorageKey () {
+    var d = new Date()
+    var y = d.getFullYear()
+    var m = d.getMonth() + 1
+    var day = d.getDate()
+    return 'solo_th_liked_' + y + '-' + (m < 10 ? '0' + m : m) + '-' + (day < 10 ? '0' + day : day)
+  }
+
+  function getLikedSetForToday () {
+    var result = {}
+    if (!window.localStorage) {
+      return result
+    }
+    try {
+      var raw = window.localStorage.getItem(getTodayLikeStorageKey())
+      if (raw) {
+        var arr = JSON.parse(raw)
+        if (Array.isArray(arr)) {
+          for (var i = 0; i < arr.length; i++) {
+            result[String(arr[i])] = true
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore storage parse error
+    }
+    return result
+  }
+
+  function markLikedForToday (oId) {
+    if (!window.localStorage || !oId) {
+      return
+    }
+    try {
+      var key = getTodayLikeStorageKey()
+      var raw = window.localStorage.getItem(key)
+      var arr = raw ? JSON.parse(raw) : []
+      if (!Array.isArray(arr)) {
+        arr = []
+      }
+      var idStr = String(oId)
+      if (arr.indexOf(idStr) === -1) {
+        arr.push(idStr)
+        window.localStorage.setItem(key, JSON.stringify(arr))
+      }
+    } catch (e) {
+      // Ignore storage write error
+    }
+  }
+
+  function bindTreeHoleEsc () {
+    if (document.body.getAttribute('data-th-esc-bound') === '1') {
+      return
+    }
+    document.body.setAttribute('data-th-esc-bound', '1')
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' || e.keyCode === 27) {
+        var modal = document.getElementById('treeHoleModal')
+        if (modal && modal.classList.contains('is-open')) {
+          modal.classList.remove('is-open')
+          modal.setAttribute('aria-hidden', 'true')
+        }
+      }
+    })
+  }
+
+  function initTreeHolePage () {
+    var app = document.getElementById('treeHoleApp')
+    if (!app || app.getAttribute('data-th-bound') === '1') {
+      return
+    }
+    app.setAttribute('data-th-bound', '1')
+    bindTreeHoleEsc()
+
+    var servePath = (app.getAttribute('data-serve-path') || (window.Label && window.Label.servePath) || '').replace(/\/$/, '')
+    var noEl = document.getElementById('treeHoleNo')
+    var watchedNumEl = document.getElementById('treeHoleWatchedNum')
+    var bodyEl = document.getElementById('treeHoleContent')
+    var likeBtn = document.getElementById('treeHoleLikeBtn')
+    var likeCountEl = document.getElementById('treeHoleLikeCount')
+    var nextBtn = document.getElementById('treeHoleNextBtn')
+    var modal = document.getElementById('treeHoleModal')
+    var backdrop = document.getElementById('treeHoleModalBackdrop')
+    var openModalBtn = document.getElementById('treeHoleOpenModalBtn')
+    var closeModalBtn = document.getElementById('treeHoleCloseModalBtn')
+    var cancelBtn = document.getElementById('treeHoleCancelBtn')
+    var submitBtn = document.getElementById('treeHoleSubmitBtn')
+    var inputEl = document.getElementById('treeHoleInput')
+    var charCountEl = document.getElementById('treeHoleCharCount')
+    var formErrorEl = document.getElementById('treeHoleFormError')
+    var toastEl = document.getElementById('treeHoleToast')
+
+    var currentId = ''
+    var isDrawing = false
+    var isLiking = false
+    var isSubmitting = false
+    var toastTimer = null
+
+    function showToast (text) {
+      if (!toastEl) {
+        return
+      }
+      toastEl.textContent = text
+      toastEl.classList.add('is-show')
+      if (toastTimer) {
+        clearTimeout(toastTimer)
+      }
+      toastTimer = setTimeout(function () {
+        toastEl.classList.remove('is-show')
+      }, 2800)
+    }
+
+    function renderLetterBody (rawContent) {
+      if (!bodyEl) {
+        return
+      }
+      var decoded = decodeTreeHoleEntitiesOnce(rawContent)
+      var normalized = decoded.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+      var paragraphs = normalized.split(/\n{2,}/)
+      bodyEl.innerHTML = ''
+      for (var i = 0; i < paragraphs.length; i++) {
+        var pEl = document.createElement('p')
+        var lines = paragraphs[i].split('\n')
+        for (var j = 0; j < lines.length; j++) {
+          if (j > 0) {
+            pEl.appendChild(document.createElement('br'))
+          }
+          pEl.appendChild(document.createTextNode(lines[j]))
+        }
+        bodyEl.appendChild(pEl)
+      }
+    }
+
+    function applyMessage (msg) {
+      if (!msg || !msg.oId) {
+        currentId = ''
+        if (noEl) {
+          noEl.textContent = 'NO. ------'
+        }
+        if (watchedNumEl) {
+          watchedNumEl.textContent = '0'
+        }
+        if (likeCountEl) {
+          likeCountEl.textContent = '0'
+        }
+        if (likeBtn) {
+          likeBtn.classList.remove('is-liked')
+          likeBtn.disabled = true
+        }
+        if (bodyEl) {
+          bodyEl.innerHTML = '<p class="treehole-card__empty">树洞里暂时还是空的，点击上方「+ 投递树洞」留下第一份心事吧。</p>'
+        }
+        return
+      }
+
+      currentId = String(msg.oId)
+      if (noEl) {
+        noEl.textContent = 'NO. ' + (currentId.length > 6 ? currentId.slice(-6) : currentId)
+      }
+      if (watchedNumEl) {
+        watchedNumEl.textContent = String(msg.watchedCount || 0)
+      }
+      if (likeCountEl) {
+        likeCountEl.textContent = String(msg.likeCount || 0)
+      }
+      if (likeBtn) {
+        likeBtn.disabled = false
+        var likedMap = getLikedSetForToday()
+        if (likedMap[currentId]) {
+          likeBtn.classList.add('is-liked')
+        } else {
+          likeBtn.classList.remove('is-liked')
+        }
+      }
+      renderLetterBody(msg.content || '')
+    }
+
+    function fetchRandomMessage (avoidDuplicate, retryDone) {
+      if (isDrawing && !retryDone) {
+        return
+      }
+      isDrawing = true
+      if (nextBtn) {
+        nextBtn.disabled = true
+      }
+      if (bodyEl && !retryDone) {
+        bodyEl.classList.add('is-switching')
+      }
+
+      var previousId = currentId
+      fetch(servePath + '/hole/message/random?_t=' + Date.now(), {
+        method: 'GET',
+        credentials: 'same-origin'
+      }).then(function (resp) {
+        return resp.json()
+      }).then(function (data) {
+        var msg = data && (data.randomMessage || data.randomTreeHole) ? (data.randomMessage || data.randomTreeHole) : null
+        if (avoidDuplicate && !retryDone && msg && msg.oId && String(msg.oId) === previousId) {
+          fetchRandomMessage(false, true)
+          return
+        }
+        applyMessage(msg)
+        if (bodyEl) {
+          bodyEl.classList.remove('is-switching')
+        }
+        isDrawing = false
+        if (nextBtn) {
+          nextBtn.disabled = false
+        }
+      }).catch(function () {
+        if (bodyEl) {
+          bodyEl.classList.remove('is-switching')
+          if (!currentId) {
+            bodyEl.innerHTML = '<p class="treehole-card__empty">暂时未能连接到树洞，请稍后再试 ~</p>'
+          }
+        }
+        isDrawing = false
+        if (nextBtn) {
+          nextBtn.disabled = false
+        }
+      })
+    }
+
+    function openModal () {
+      if (!modal) {
+        return
+      }
+      if (formErrorEl) {
+        formErrorEl.textContent = ''
+      }
+      if (charCountEl && inputEl) {
+        charCountEl.textContent = inputEl.value.length + ' / 5000'
+      }
+      modal.classList.add('is-open')
+      modal.setAttribute('aria-hidden', 'false')
+      if (inputEl) {
+        setTimeout(function () {
+          inputEl.focus()
+        }, 50)
+      }
+    }
+
+    function closeModal () {
+      if (!modal) {
+        return
+      }
+      modal.classList.remove('is-open')
+      modal.setAttribute('aria-hidden', 'true')
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', function () {
+        fetchRandomMessage(true, false)
+      })
+    }
+
+    if (likeBtn) {
+      likeBtn.addEventListener('click', function () {
+        if (!currentId || isLiking) {
+          return
+        }
+        var targetId = currentId
+        isLiking = true
+        fetch(servePath + '/hole/message/addLike/' + encodeURIComponent(targetId), {
+          method: 'GET',
+          credentials: 'same-origin'
+        }).then(function (resp) {
+          return resp.json()
+        }).then(function (res) {
+          if (res && res.code === 0) {
+            if (currentId === targetId && likeCountEl) {
+              var prev = parseInt(likeCountEl.textContent || '0', 10)
+              likeCountEl.textContent = String((isNaN(prev) ? 0 : prev) + 1)
+            }
+            likeBtn.classList.add('is-liked')
+            markLikedForToday(targetId)
+          } else {
+            var msg = (res && res.msg) || ''
+            if (msg.indexOf('已经') !== -1) {
+              likeBtn.classList.add('is-liked')
+              markLikedForToday(targetId)
+              showToast('今天已经为这条心事点过共鸣啦')
+            } else {
+              showToast(msg || '共鸣失败，请稍后重试')
+            }
+          }
+        }).catch(function () {
+          showToast('网络开小差了，请稍后重试')
+        }).finally(function () {
+          isLiking = false
+        })
+      })
+    }
+
+    if (openModalBtn) {
+      openModalBtn.addEventListener('click', openModal)
+    }
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', closeModal)
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', closeModal)
+    }
+    if (backdrop) {
+      backdrop.addEventListener('click', closeModal)
+    }
+    if (inputEl && charCountEl) {
+      inputEl.addEventListener('input', function () {
+        charCountEl.textContent = inputEl.value.length + ' / 5000'
+        if (formErrorEl && formErrorEl.textContent) {
+          formErrorEl.textContent = ''
+        }
+      })
+    }
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function () {
+        if (isSubmitting || !inputEl) {
+          return
+        }
+        var content = inputEl.value.trim()
+        if (!content) {
+          if (formErrorEl) {
+            formErrorEl.textContent = '写点什么再投入树洞吧 ~'
+          }
+          inputEl.focus()
+          return
+        }
+        if (content.length > 5000) {
+          if (formErrorEl) {
+            formErrorEl.textContent = '内容最多不能超过 5000 字哦'
+          }
+          return
+        }
+
+        isSubmitting = true
+        submitBtn.disabled = true
+        submitBtn.textContent = '投递中...'
+        if (formErrorEl) {
+          formErrorEl.textContent = ''
+        }
+
+        fetch(servePath + '/hole/message/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ hole: { content: content } })
+        }).then(function (resp) {
+          return resp.json()
+        }).then(function (res) {
+          if (res && res.code === 0) {
+            inputEl.value = ''
+            if (charCountEl) {
+              charCountEl.textContent = '0 / 5000'
+            }
+            closeModal()
+            showToast('✨ 已投入树洞，经博主审核后将随缘漂流给有缘人')
+          } else {
+            var errMsg = (res && res.msg) || '投递失败，请稍后重试'
+            if (errMsg === 'not allowed') {
+              errMsg = '今日投递次数已达上限，明天再来吧 ~'
+            }
+            if (formErrorEl) {
+              formErrorEl.textContent = errMsg
+            }
+          }
+        }).catch(function () {
+          if (formErrorEl) {
+            formErrorEl.textContent = '网络请求失败，请检查网络后重试'
+          }
+        }).finally(function () {
+          isSubmitting = false
+          submitBtn.disabled = false
+          submitBtn.textContent = '投入树洞'
+        })
+      })
+    }
+
+    fetchRandomMessage(false, false)
+  }
+
+  var initialJq = typeof window.$ !== 'undefined' ? window.$ : null
+  var pjaxDomObserver = null
+
+  function bindPjaxObserver () {
+    var pjaxEl = document.getElementById('pjax')
+    if (!pjaxEl || pjaxEl.getAttribute('data-pjax-observed') === '1') {
+      return
+    }
+    pjaxEl.setAttribute('data-pjax-observed', '1')
+    if (typeof MutationObserver !== 'undefined') {
+      pjaxDomObserver = new MutationObserver(function () {
+        initEnhancements()
+      })
+      pjaxDomObserver.observe(pjaxEl, { childList: true, subtree: false })
+    }
+  }
+
   function initEnhancements () {
+    bindPjaxObserver()
     enhanceCodeBlocks()
     bindCodeObserver()
     bindBottomObserver()
@@ -342,6 +766,7 @@
     bindMobileNav()
     bindTagFilter()
     ensureBackToTop()
+    initTreeHolePage()
   }
 
   if (document.readyState === 'loading') {
@@ -350,10 +775,16 @@
     initEnhancements()
   }
 
-  if (typeof window.$ !== 'undefined') {
-    $(function () {
+  if (initialJq) {
+    initialJq('#pjax').on('pjax.end', function () {
       initEnhancements()
-      $('#pjax').on('pjax.end', function () {
+    })
+  }
+
+  if (typeof window.$ !== 'undefined') {
+    window.$(function () {
+      initEnhancements()
+      window.$('#pjax').on('pjax.end', function () {
         initEnhancements()
       })
     })
