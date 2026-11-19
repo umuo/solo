@@ -121,6 +121,12 @@ public class TreeHoleProcessorTestCase extends AbstractTestCase {
             Assert.assertNotEquals(oId, hiddenId, "Hidden record must stay excluded");
             Assert.assertFalse(msg.has(TreeHole.clientIp));
             Assert.assertFalse(msg.has(TreeHole.location));
+            Assert.assertFalse(msg.has(TreeHole.isShow));
+            Assert.assertFalse(msg.has(TreeHole.hole_random_double));
+            Assert.assertTrue(StringUtils.isNotBlank(msg.optString(TreeHole.createTime)),
+                    "Random message should include createTime");
+            Assert.assertTrue(msg.optString("createTimeStr").matches("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}$"),
+                    "Random message should include formatted createTimeStr");
             Assert.assertFalse(StringUtils.containsAny(msg.getString(TreeHole.content), '<', '>'),
                     "Content must not contain unescaped angle brackets");
             seenFirstRound.add(oId);

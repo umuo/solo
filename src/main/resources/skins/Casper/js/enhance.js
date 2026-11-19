@@ -444,6 +444,49 @@
     }
   }
 
+  var TREE_HOLE_THEMES = ['sky', 'sakura', 'mint', 'amber', 'lavender', 'peach', 'sage', 'aqua']
+
+  function applyRandomCardTheme (cardEl) {
+    if (!cardEl) {
+      return
+    }
+    var currentTheme = cardEl.getAttribute('data-card-theme') || ''
+    var candidates = []
+    for (var i = 0; i < TREE_HOLE_THEMES.length; i++) {
+      if (TREE_HOLE_THEMES[i] !== currentTheme) {
+        candidates.push(TREE_HOLE_THEMES[i])
+      }
+    }
+    if (!candidates.length) {
+      candidates = TREE_HOLE_THEMES
+    }
+    var picked = candidates[Math.floor(Math.random() * candidates.length)]
+    cardEl.setAttribute('data-card-theme', picked)
+  }
+
+  function formatTreeHoleTime (msg) {
+    if (!msg) {
+      return ''
+    }
+    if (msg.createTimeStr) {
+      return String(msg.createTimeStr)
+    }
+    if (!msg.createTime) {
+      return ''
+    }
+    var ts = parseInt(String(msg.createTime), 10)
+    if (isNaN(ts) || ts <= 0) {
+      return ''
+    }
+    var d = new Date(ts)
+    if (isNaN(d.getTime())) {
+      return ''
+    }
+    var pad = function (n) { return n < 10 ? '0' + n : String(n) }
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+  }
+
   function initTreeHolePage () {
     var app = document.getElementById('treeHoleApp')
     if (!app || app.getAttribute('data-th-bound') === '1') {
@@ -454,9 +497,12 @@
     bindTreeHoleEsc()
 
     var servePath = (app.getAttribute('data-serve-path') || (window.Label && window.Label.servePath) || '').replace(/\/$/, '')
+    var cardEl = document.getElementById('treeHoleCard') || app.querySelector('.treehole-card')
     var noEl = document.getElementById('treeHoleNo')
     var watchedNumEl = document.getElementById('treeHoleWatchedNum')
     var bodyEl = document.getElementById('treeHoleContent')
+    var timeWrapEl = document.getElementById('treeHoleTimeWrap')
+    var timeEl = document.getElementById('treeHoleTime')
     var likeBtn = document.getElementById('treeHoleLikeBtn')
     var likeCountEl = document.getElementById('treeHoleLikeCount')
     var nextBtn = document.getElementById('treeHoleNextBtn')
@@ -475,7 +521,10 @@
     var isDrawing = false
     var isLiking = false
     var isSubmitting = false
+    var hasLoadedFirstMessage = false
     var toastTimer = null
+
+    applyRandomCardTheme(cardEl)
 
     function showToast (text) {
       if (!toastEl) {
@@ -519,6 +568,7 @@
     function applyMessage (msg) {
       if (!msg || !msg.oId) {
         currentId = ''
+        hasLoadedFirstMessage = true
         if (noEl) {
           noEl.textContent = 'NO. ------'
         }
@@ -527,6 +577,12 @@
         }
         if (likeCountEl) {
           likeCountEl.textContent = '0'
+        }
+        if (timeWrapEl) {
+          timeWrapEl.classList.add('is-empty')
+        }
+        if (timeEl) {
+          timeEl.textContent = '--'
         }
         if (likeBtn) {
           likeBtn.classList.remove('is-liked')
@@ -538,6 +594,11 @@
         return
       }
 
+      if (hasLoadedFirstMessage) {
+        applyRandomCardTheme(cardEl)
+      }
+      hasLoadedFirstMessage = true
+
       currentId = String(msg.oId)
       if (noEl) {
         noEl.textContent = 'NO. ' + (currentId.length > 6 ? currentId.slice(-6) : currentId)
@@ -547,6 +608,18 @@
       }
       if (likeCountEl) {
         likeCountEl.textContent = String(msg.likeCount || 0)
+      }
+      var timeStr = formatTreeHoleTime(msg)
+      if (timeEl && timeWrapEl) {
+        if (timeStr) {
+          timeEl.textContent = '留于 ' + timeStr
+          timeEl.setAttribute('datetime', timeStr)
+          timeWrapEl.classList.remove('is-empty')
+        } else {
+          timeEl.textContent = '--'
+          timeEl.removeAttribute('datetime')
+          timeWrapEl.classList.add('is-empty')
+        }
       }
       if (likeBtn) {
         likeBtn.disabled = false

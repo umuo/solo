@@ -35,7 +35,7 @@
             <button type="button" class="treehole-hero__cta" id="treeHoleOpenModalBtn">+ 投递树洞</button>
         </div>
 
-        <section class="treehole-card" aria-live="polite">
+        <section class="treehole-card" id="treeHoleCard" aria-live="polite">
             <div class="treehole-card__meta">
                 <span class="treehole-card__no" id="treeHoleNo">NO. ------</span>
                 <span class="treehole-card__watched" id="treeHoleWatched">
@@ -48,6 +48,13 @@
 
             <div class="treehole-card__body" id="treeHoleContent">
                 <p class="treehole-card__loading">正在翻阅树洞里的心事...</p>
+            </div>
+
+            <div class="treehole-card__time is-empty" id="treeHoleTimeWrap">
+                <svg class="treehole-icon treehole-icon--time" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.2 3.1.8-1.2-4.5-2.7V7z"/>
+                </svg>
+                <time id="treeHoleTime">--</time>
             </div>
 
             <div class="treehole-card__footer">

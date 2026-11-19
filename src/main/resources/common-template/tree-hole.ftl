@@ -56,17 +56,38 @@
                 width: 100%; max-width: 740px; margin: -68px auto 48px; padding: 0 16px; flex: 1;
             }
             .th-fallback-card {
-                background: #fff; border-radius: 16px; padding: 26px 32px 22px;
-                height: 420px; display: flex; flex-direction: column;
+                --th-bg: #eef7ff;
+                --th-border: #d5e8fb;
+                --th-pill-border: #cbe2fa;
+                --th-pill-text: #4b6b88;
+                --th-meta-text: #5b7691;
+                --th-divider: rgba(186, 214, 242, 0.6);
+                background-color: var(--th-bg);
+                background-image: radial-gradient(circle at 12% 10%, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 58%);
+                border: 1px solid var(--th-border);
+                border-radius: 16px;
+                padding: 26px 32px 22px;
+                height: 420px;
+                display: flex;
+                flex-direction: column;
                 box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+                transition: background-color 0.36s ease, border-color 0.36s ease;
             }
+            .th-fallback-card[data-card-theme="sky"] { --th-bg: #eef7ff; --th-border: #d5e8fb; --th-pill-border: #cbe2fa; --th-pill-text: #4b6b88; --th-meta-text: #5b7691; --th-divider: rgba(186, 214, 242, 0.6); }
+            .th-fallback-card[data-card-theme="sakura"] { --th-bg: #fff1f4; --th-border: #fbdbe3; --th-pill-border: #f7cdd8; --th-pill-text: #8a5565; --th-meta-text: #8c5e6c; --th-divider: rgba(244, 198, 210, 0.6); }
+            .th-fallback-card[data-card-theme="mint"] { --th-bg: #edfaf5; --th-border: #cef0e2; --th-pill-border: #bfe8d7; --th-pill-text: #467362; --th-meta-text: #527a6b; --th-divider: rgba(178, 226, 207, 0.6); }
+            .th-fallback-card[data-card-theme="amber"] { --th-bg: #fff8eb; --th-border: #f7e5c2; --th-pill-border: #f1d9ad; --th-pill-text: #7c6238; --th-meta-text: #806840; --th-divider: rgba(238, 212, 166, 0.6); }
+            .th-fallback-card[data-card-theme="lavender"] { --th-bg: #f4f1ff; --th-border: #e2dbfb; --th-pill-border: #d7cefa; --th-pill-text: #625488; --th-meta-text: #695c8c; --th-divider: rgba(208, 198, 244, 0.6); }
+            .th-fallback-card[data-card-theme="peach"] { --th-bg: #fff3ec; --th-border: #fbe0d0; --th-pill-border: #f6d2bd; --th-pill-text: #855941; --th-meta-text: #87604a; --th-divider: rgba(242, 203, 180, 0.6); }
+            .th-fallback-card[data-card-theme="sage"] { --th-bg: #f3f8ec; --th-border: #dcebc9; --th-pill-border: #cfe3b7; --th-pill-text: #556f3f; --th-meta-text: #5d7548; --th-divider: rgba(202, 224, 178, 0.6); }
+            .th-fallback-card[data-card-theme="aqua"] { --th-bg: #ecfafc; --th-border: #cdeef4; --th-pill-border: #bce6ee; --th-pill-text: #436d78; --th-meta-text: #4e7580; --th-divider: rgba(178, 224, 234, 0.6); }
             .th-fallback-meta {
                 flex-shrink: 0;
                 display: flex; justify-content: space-between; align-items: center;
-                margin-bottom: 16px; font-size: 13px; color: #64748b;
+                margin-bottom: 16px; font-size: 13px; color: var(--th-meta-text);
             }
             .th-fallback-no {
-                background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 999px; font-weight: 600;
+                background: rgba(255, 255, 255, 0.78); border: 1px solid var(--th-pill-border); color: var(--th-pill-text); padding: 4px 12px; border-radius: 999px; font-weight: 600;
             }
             .th-fallback-body {
                 flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; padding-right: 6px;
@@ -76,13 +97,19 @@
             .th-fallback-letter { margin: auto 0; width: 100%; }
             .th-fallback-body p { margin: 0 0 12px; }
             .th-fallback-body p:last-child { margin-bottom: 0; }
+            .th-fallback-time {
+                flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; gap: 5px;
+                margin-top: 10px; font-family: "Caveat", "LXGW WenKai", "STKaiti", "Kaiti SC", "KaiTi", serif;
+                font-size: 14px; color: var(--th-meta-text); opacity: 0.9;
+            }
+            .th-fallback-time.is-empty { visibility: hidden; opacity: 0; }
             .th-fallback-footer {
                 flex-shrink: 0;
                 display: flex; justify-content: space-between; align-items: center;
-                border-top: 1px solid #f1f5f9; margin-top: 16px; padding-top: 16px;
+                border-top: 1px solid var(--th-divider); margin-top: 10px; padding-top: 14px;
             }
             .th-fallback-btn {
-                border-radius: 999px; padding: 8px 18px; font-size: 14px; cursor: pointer; border: 1px solid #f4c2c2; background: #fff; color: #e25555;
+                border-radius: 999px; padding: 8px 18px; font-size: 14px; cursor: pointer; border: 1px solid #f4c2c2; background: rgba(255, 255, 255, 0.86); color: #e25555;
             }
             .th-fallback-btn.is-liked { background: #fff1f2; border-color: #fb7185; font-weight: 600; }
             .th-fallback-next {
@@ -99,6 +126,8 @@
             @media (max-width: 768px) {
                 .th-fallback-card { height: 380px; padding: 20px 20px 18px; }
                 .th-fallback-body { font-size: 18px; line-height: 1.85; }
+                .th-fallback-time { margin-top: 8px; font-size: 13px; }
+                .th-fallback-footer { margin-top: 10px; padding-top: 12px; }
             }
             .treehole-char-count { position: absolute; right: 12px; bottom: 8px; font-size: 12px; color: #94a3b8; }
             .treehole-modal__note { font-size: 12px; color: #64748b; margin: 10px 0 8px; }
@@ -128,13 +157,16 @@
 </div>
 
 <main id="treeHoleApp" class="th-fallback-main" data-serve-path="${servePath}">
-    <section class="th-fallback-card">
+    <section class="th-fallback-card" id="treeHoleCard">
         <div class="th-fallback-meta">
             <span class="th-fallback-no" id="treeHoleNo">NO. ------</span>
             <span id="treeHoleWatched">已被 <strong id="treeHoleWatchedNum">0</strong> 人遇见</span>
         </div>
         <div class="th-fallback-body" id="treeHoleContent">
             <p>正在翻阅树洞里的心事...</p>
+        </div>
+        <div class="th-fallback-time is-empty" id="treeHoleTimeWrap">
+            <time id="treeHoleTime">--</time>
         </div>
         <div class="th-fallback-footer">
             <button type="button" class="th-fallback-btn" id="treeHoleLikeBtn">♥ 共鸣 (<span id="treeHoleLikeCount">0</span>)</button>
@@ -169,9 +201,13 @@
   if (!app) return
   var servePath = (app.getAttribute('data-serve-path') || '').replace(/\/$/, '')
   var currentId = ''
+  var hasLoadedFirst = false
+  var cardEl = document.getElementById('treeHoleCard')
   var noEl = document.getElementById('treeHoleNo')
   var watchedNumEl = document.getElementById('treeHoleWatchedNum')
   var bodyEl = document.getElementById('treeHoleContent')
+  var timeWrapEl = document.getElementById('treeHoleTimeWrap')
+  var timeEl = document.getElementById('treeHoleTime')
   var likeBtn = document.getElementById('treeHoleLikeBtn')
   var likeCountEl = document.getElementById('treeHoleLikeCount')
   var nextBtn = document.getElementById('treeHoleNextBtn')
@@ -184,6 +220,25 @@
   var countEl = document.getElementById('treeHoleCharCount')
   var errEl = document.getElementById('treeHoleFormError')
   var toastEl = document.getElementById('treeHoleToast')
+
+  var THEMES = ['sky', 'sakura', 'mint', 'amber', 'lavender', 'peach', 'sage', 'aqua']
+  function pickTheme () {
+    if (!cardEl) return
+    var cur = cardEl.getAttribute('data-card-theme') || ''
+    var pool = THEMES.filter(function (t) { return t !== cur })
+    cardEl.setAttribute('data-card-theme', pool[Math.floor(Math.random() * pool.length)])
+  }
+  function fmtTime (msg) {
+    if (!msg) return ''
+    if (msg.createTimeStr) return String(msg.createTimeStr)
+    var ts = parseInt(String(msg.createTime || ''), 10)
+    if (isNaN(ts) || ts <= 0) return ''
+    var d = new Date(ts)
+    if (isNaN(d.getTime())) return ''
+    var p = function (n) { return n < 10 ? '0' + n : String(n) }
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes())
+  }
+  pickTheme()
 
   function decodeOnce (str) {
     return String(str || '').replace(/&(lt|gt|quot|#39|amp);/g, function (m, k) {
@@ -218,18 +273,31 @@
       .then(function (data) {
         var msg = data && (data.randomMessage || data.randomTreeHole)
         if (!msg || !msg.oId) {
+          hasLoadedFirst = true
           currentId = ''
           noEl.textContent = 'NO. ------'
           watchedNumEl.textContent = '0'
           likeCountEl.textContent = '0'
+          timeWrapEl.classList.add('is-empty')
+          timeEl.textContent = '--'
           bodyEl.innerHTML = '<p>树洞里暂时还是空空的，点击上方写下第一份心事吧。</p>'
           likeBtn.disabled = true
           return
         }
+        if (hasLoadedFirst) pickTheme()
+        hasLoadedFirst = true
         currentId = String(msg.oId)
         noEl.textContent = 'NO. ' + (currentId.length > 6 ? currentId.slice(-6) : currentId)
         watchedNumEl.textContent = String(msg.watchedCount || 0)
         likeCountEl.textContent = String(msg.likeCount || 0)
+        var t = fmtTime(msg)
+        if (t) {
+          timeEl.textContent = '留于 ' + t
+          timeWrapEl.classList.remove('is-empty')
+        } else {
+          timeEl.textContent = '--'
+          timeWrapEl.classList.add('is-empty')
+        }
         likeBtn.disabled = false
         renderBody(msg.content || '')
       })

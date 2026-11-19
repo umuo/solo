@@ -39,8 +39,10 @@ import org.b3log.solo.util.Skins;
 import org.b3log.solo.util.StatusCodes;
 import org.json.JSONObject;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -67,6 +69,10 @@ public class TreeHoleProcessor {
     private OptionQueryService optionQueryService;
 
     private static final Logger LOGGER = LogManager.getLogger(TreeHoleProcessor.class);
+
+    private static final ZoneOffset ZONE_CN = ZoneOffset.ofHours(8);
+
+    private static final DateTimeFormatter CREATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     public static final Set<String> WATCHED_SET = Collections.synchronizedSet(new HashSet<>());
 
@@ -228,8 +234,8 @@ public class TreeHoleProcessor {
                 randomMessage.put(TreeHole.content, rawContent.replace("<", "&lt;").replace(">", "&gt;"));
             }
 
+            randomMessage.put("createTimeStr", formatCreateTime(randomMessage.optString(TreeHole.createTime)));
             randomMessage.remove(TreeHole.hole_random_double);
-            randomMessage.remove(TreeHole.createTime);
             randomMessage.remove(TreeHole.isShow);
             randomMessage.remove(TreeHole.location);
             randomMessage.remove(TreeHole.clientIp);
@@ -237,6 +243,24 @@ public class TreeHoleProcessor {
         } catch (final ServiceException e) {
             LOGGER.error("get Randomly , {}", e.getMessage());
             return new JSONObject();
+        }
+    }
+
+    /**
+     * Formats a 13-digit epoch-millis timestamp string into {@code yyyy-MM-dd HH:mm} (UTC+8).
+     *
+     * @param rawCreateTime raw timestamp string
+     * @return formatted date-time string, or empty string when invalid
+     */
+    private static String formatCreateTime(final String rawCreateTime) {
+        if (StringUtils.isBlank(rawCreateTime)) {
+            return "";
+        }
+        try {
+            final long millis = Long.parseLong(rawCreateTime.trim());
+            return Instant.ofEpochMilli(millis).atOffset(ZONE_CN).format(CREATE_TIME_FORMATTER);
+        } catch (final Exception e) {
+            return "";
         }
     }
 
